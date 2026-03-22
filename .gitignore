@@ -1,0 +1,23 @@
+### Gradle ###
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+### Android ###
+local.properties
+*.keystore
+*.jks
+
+### IntelliJ / Android Studio ###
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+captures/
+
+### macOS ###
+.DS_Store
+
+### Kotlin/Native ###
+*.klib
