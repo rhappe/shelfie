@@ -39,11 +39,16 @@ Give households a single source of truth for what's in their pantry, reduce food
 
 ### Phase 2 — Shopping Lists
 
-- As a user, I can add items to the shopping list from my pantry with a single tap, or as free-form entries not tied to any pantry item.
+- A default shopping list named "My List" is created automatically for new users.
+- As a user, I can create additional named shopping lists (e.g., "Kroger", "Costco").
+- As a user, I can rename or delete a shopping list.
+- As a user, I can add items to a shopping list from my pantry with a single tap, which opens a picker to choose which list to add to. The list I last added that item to is pre-selected.
+- As a user, I can also add free-form entries to a shopping list not tied to any pantry item.
 - The app remembers the last quantity I specified for each pantry-linked item to pre-fill future shopping trips.
-- As a user, I can view and edit the shopping list, checking off items as I shop.
+- As a user, I can view and edit a shopping list, checking off items as I shop.
 - As a user, I can tap "Done Shopping" to automatically update pantry quantities for all checked pantry-linked items.
 - For any checked free-form items, I am prompted to optionally add them to my pantry as new entries.
+- As a user, I can sort my list of shopping lists by creation order (default), alphabetical, most items, or least items.
 
 ### Phase 3 — Recipes
 
@@ -97,18 +102,22 @@ Give households a single source of truth for what's in their pantry, reduce food
 
 Deferred — implementation details TBD when this phase is reached.
 
-### 3.4 Shopping List (Phase 2)
+### 3.4 Shopping Lists (Phase 2)
 
-- A single active shopping list at a time.
+- Users can have multiple named shopping lists. A default list named "My List" is created automatically for new users.
+- Each list has a name and an ordered set of entries.
 - Each entry: item name, desired quantity, unit, checked state, and a flag indicating whether it is linked to a pantry item or is a free-form entry.
-- "Add to List" button on each pantry item opens a quantity dialog pre-filled with last-used quantity.
-- Free-form items can be typed directly into the shopping list with a name, quantity, and unit.
+- The shopping lists index screen displays lists in creation order by default. The user can change sort order: creation order, alphabetical, most items, or least items.
+- "Add to List" button on each pantry item opens a two-step flow:
+  1. A picker showing all shopping lists. The list this item was most recently added to is pre-selected.
+  2. A quantity dialog pre-filled with the last-used quantity for that item.
+- Free-form items can be typed directly into any shopping list with a name, quantity, and unit.
 - Shopping mode: full-screen list optimized for one-handed use while in-store.
-- "Done Shopping" flow:
+- "Done Shopping" flow (per list):
   1. Confirmation dialog showing all checked items and quantities.
   2. On confirm: pantry quantities are incremented for all checked pantry-linked items.
   3. For any checked free-form items: prompt asking whether to add each to the pantry. User can set category and adjust details before confirming.
-  4. List is cleared.
+  4. List is cleared (entries removed; the list itself is retained).
 
 ### 3.5 Recipes (Phase 3)
 
@@ -326,6 +335,6 @@ This ensures at most one in-flight request per item at any time, no tap is lost,
 | Phase | Features | Target |
 |-------|----------|--------|
 | Phase 1 | Pantry CRUD, categories, offline sync, Android + Web | MVP |
-| Phase 2 | Shopping lists, household multi-user | Post-MVP |
+| Phase 2 | Multiple named shopping lists, household multi-user | Post-MVP |
 | Phase 3 | Notifications (low-stock + expiration), recipes, pantry match indicator, "Make This" deduction | Future |
 | Phase 4 | iOS native app | Indefinitely TBD (requires Apple Developer account) |
