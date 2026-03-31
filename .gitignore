@@ -21,3 +21,6 @@ captures/
 
 ### Kotlin/Native ###
 *.klib
+
+### Docker ###
+.env

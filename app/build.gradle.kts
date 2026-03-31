@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -27,6 +28,10 @@ kotlin {
         browser {
             commonWebpackConfig {
                 outputFileName = "composeApp.js"
+                devServer = KotlinWebpackConfig.DevServer(
+                    port = 3000,
+                    static = mutableListOf("kotlin"),
+                )
             }
         }
         binaries.executable()
@@ -34,6 +39,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            implementation(projects.shared)
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
