@@ -10,7 +10,9 @@ services:
     restart: unless-stopped
 
   server:
-    image: ghcr.io/rhappe/shelfie-server:latest
+    build:
+      context: .
+      dockerfile: server/Dockerfile
     ports:
       - "${SERVER_PORT:-8080}:8080"
     environment:
@@ -24,7 +26,9 @@ services:
     restart: unless-stopped
 
   web:
-    image: ghcr.io/rhappe/shelfie-web:latest
+    build:
+      context: .
+      dockerfile: web/Dockerfile
     ports:
       - "${WEB_PORT:-80}:80"
     restart: unless-stopped
