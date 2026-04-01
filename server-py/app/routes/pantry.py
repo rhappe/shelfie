@@ -4,7 +4,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, status
 from fastapi.responses import JSONResponse, Response
-from sqlalchemy import select
+from sqlalchemy import nulls_last, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import get_current_user
@@ -57,7 +57,7 @@ async def list_items(
     if sortBy == PantryItemSortBy.QUANTITY:
         query = query.order_by(PantryItem.quantity)
     elif sortBy == PantryItemSortBy.EXPIRATION_DATE:
-        query = query.order_by(PantryItem.expiration_date)
+        query = query.order_by(nulls_last(PantryItem.expiration_date.asc()))
     else:
         query = query.order_by(PantryItem.name)
 

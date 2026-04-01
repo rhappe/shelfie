@@ -35,14 +35,13 @@ class PantryViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                val state = _uiState.value
                 val items = pantryRepository.getItems(
-                    search = state.searchQuery.ifBlank { null },
-                    categoryId = state.selectedCategoryId,
-                    sortBy = state.sortBy,
+                    search = _uiState.value.searchQuery.ifBlank { null },
+                    categoryId = _uiState.value.selectedCategoryId,
+                    sortBy = _uiState.value.sortBy,
                 )
                 val categories = categoryRepository.getCategories()
-                _uiState.value = state.copy(items = items, categories = categories, isLoading = false)
+                _uiState.value = _uiState.value.copy(items = items, categories = categories, isLoading = false)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
             }
