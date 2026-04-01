@@ -34,14 +34,14 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
     user = User(
         email=request.email,
         display_name=request.display_name,
-        password_hash=hash_password(request.password),
+        password_hash=hash_password(password=request.password),
         household_id=household.id,
         role="OWNER",
     )
     db.add(user)
     await db.commit()
 
-    token = create_token(str(user.id), str(household.id), user.email)
+    token = create_token(user_id=str(user.id), household_id=str(household.id), email=user.email)
     return AuthResponse(
         token=token,
         user_id=str(user.id),
@@ -56,13 +56,13 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(User).where(User.email == request.email))
     user = result.scalars().first()
 
-    if user is None or not verify_password(request.password, user.password_hash):
+    if user is None or not verify_password(plain=request.password, hashed=user.password_hash):
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
             content={"error": "Invalid email or password"},
         )
 
-    token = create_token(str(user.id), str(user.household_id), user.email)
+    token = create_token(user_id=str(user.id), household_id=str(user.household_id), email=user.email)
     return AuthResponse(
         token=token,
         user_id=str(user.id),

@@ -13,11 +13,11 @@ ALGORITHM = "HS256"
 
 
 def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    return bcrypt.hashpw(password=password.encode(), salt=bcrypt.gensalt()).decode()
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return bcrypt.checkpw(plain.encode(), hashed.encode())
+    return bcrypt.checkpw(password=plain.encode(), hashed_password=hashed.encode())
 
 
 def create_token(user_id: str, household_id: str, email: str) -> str:
@@ -28,7 +28,7 @@ def create_token(user_id: str, household_id: str, email: str) -> str:
         "email": email,
         "exp": expire,
     }
-    return jwt.encode(payload, settings.jwt_secret, algorithm=ALGORITHM)
+    return jwt.encode(payload=payload, key=settings.jwt_secret, algorithm=ALGORITHM)
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
@@ -38,7 +38,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, settings.jwt_secret, algorithms=[ALGORITHM])
+        payload = jwt.decode(jwt=token, key=settings.jwt_secret, algorithms=[ALGORITHM])
         user_id: str | None = payload.get("userId")
         household_id: str | None = payload.get("householdId")
         email: str | None = payload.get("email")
