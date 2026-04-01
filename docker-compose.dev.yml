@@ -7,22 +7,26 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-shelfie}"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
     restart: unless-stopped
 
   server:
     build:
       context: .
-      dockerfile: server/Dockerfile
+      dockerfile: server-py/Dockerfile
     ports:
       - "${SERVER_PORT:-8080}:8080"
     environment:
-      DATABASE_URL: jdbc:postgresql://db:5432/shelfie
-      DATABASE_USER: ${POSTGRES_USER:-shelfie}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-shelfie}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@db:5432/shelfie
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       JWT_EXPIRY_DAYS: ${JWT_EXPIRY_DAYS:-90}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
 
   web:
