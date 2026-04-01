@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+import jwt
 
 from app.config import settings
 
@@ -45,5 +45,5 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         if user_id is None:
             raise credentials_exception
         return {"user_id": user_id, "household_id": household_id, "email": email}
-    except JWTError:
+    except jwt.PyJWTError:
         raise credentials_exception
