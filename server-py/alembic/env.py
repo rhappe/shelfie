@@ -19,9 +19,7 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 # Read DATABASE_URL from environment and convert async driver to sync for Alembic
-database_url = os.environ.get(
-    "DATABASE_URL", "postgresql+asyncpg://shelfie:shelfie@db:5432/shelfie"
-)
+database_url = os.environ["DATABASE_URL"]
 # Alembic needs a sync driver
 sync_url = database_url.replace("postgresql+asyncpg://", "postgresql://")
 config.set_main_option("sqlalchemy.url", sync_url)

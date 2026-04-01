@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    database_url: str = "postgresql+asyncpg://shelfie:shelfie@db:5432/shelfie"
+    database_url: str
     jwt_secret: str
     jwt_expiry_days: int = 90
     cors_origins: str = "*"
