@@ -1,4 +1,4 @@
-import uuid
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse, Response
@@ -29,7 +29,7 @@ async def list_categories(
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    household_id = uuid.UUID(user["household_id"])
+    household_id = UUID(user["household_id"])
     result = await db.execute(
         select(Category)
         .where(Category.household_id == household_id)
@@ -45,7 +45,7 @@ async def create_category(
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    household_id = uuid.UUID(user["household_id"])
+    household_id = UUID(user["household_id"])
     category = Category(
         name=request.name,
         description=request.description,
@@ -61,13 +61,13 @@ async def create_category(
 
 @router.put("/{category_id}", response_model=CategoryResponse, response_model_by_alias=True)
 async def update_category(
-    category_id: str,
+    category_id: UUID,
     request: UpdateCategoryRequest,
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    household_id = uuid.UUID(user["household_id"])
-    cat_uuid = uuid.UUID(category_id)
+    household_id = UUID(user["household_id"])
+    cat_uuid = category_id
     result = await db.execute(
         select(Category).where(
             Category.id == cat_uuid,
@@ -92,12 +92,12 @@ async def update_category(
 
 @router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_category(
-    category_id: str,
+    category_id: UUID,
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    household_id = uuid.UUID(user["household_id"])
-    cat_uuid = uuid.UUID(category_id)
+    household_id = UUID(user["household_id"])
+    cat_uuid = category_id
     result = await db.execute(
         select(Category).where(
             Category.id == cat_uuid,

@@ -1,5 +1,5 @@
-import uuid
 from datetime import date, datetime, timezone
+from uuid import UUID
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, status
@@ -44,13 +44,13 @@ async def list_items(
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    household_id = uuid.UUID(user["household_id"])
+    household_id = UUID(user["household_id"])
     query = select(PantryItem).where(PantryItem.household_id == household_id)
 
     if search:
         query = query.where(PantryItem.name.ilike(f"%{search}%"))
     if categoryId:
-        query = query.where(PantryItem.category_id == uuid.UUID(categoryId))
+        query = query.where(PantryItem.category_id == UUID(categoryId))
 
     if sortBy == "quantity":
         query = query.order_by(PantryItem.quantity)
@@ -70,14 +70,14 @@ async def create_item(
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    household_id = uuid.UUID(user["household_id"])
+    household_id = UUID(user["household_id"])
     now = datetime.now(timezone.utc)
 
     item = PantryItem(
         name=request.name,
         quantity=request.quantity,
         unit=request.unit,
-        category_id=uuid.UUID(request.category_id) if request.category_id else None,
+        category_id=UUID(request.category_id) if request.category_id else None,
         expiration_date=date.fromisoformat(request.expiration_date) if request.expiration_date else None,
         low_stock_threshold=request.low_stock_threshold,
         notify_on_low_stock=request.notify_on_low_stock,
@@ -94,13 +94,13 @@ async def create_item(
 
 @router.put("/{item_id}", response_model=PantryItemResponse, response_model_by_alias=True)
 async def update_item(
-    item_id: str,
+    item_id: UUID,
     request: UpdatePantryItemRequest,
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    household_id = uuid.UUID(user["household_id"])
-    item_uuid = uuid.UUID(item_id)
+    household_id = UUID(user["household_id"])
+    item_uuid = item_id
     result = await db.execute(
         select(PantryItem).where(
             PantryItem.id == item_uuid,
@@ -117,7 +117,7 @@ async def update_item(
     item.name = request.name
     item.quantity = request.quantity
     item.unit = request.unit
-    item.category_id = uuid.UUID(request.category_id) if request.category_id else None
+    item.category_id = UUID(request.category_id) if request.category_id else None
     item.expiration_date = date.fromisoformat(request.expiration_date) if request.expiration_date else None
     item.low_stock_threshold = request.low_stock_threshold
     item.notify_on_low_stock = request.notify_on_low_stock
@@ -131,12 +131,12 @@ async def update_item(
 
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_item(
-    item_id: str,
+    item_id: UUID,
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    household_id = uuid.UUID(user["household_id"])
-    item_uuid = uuid.UUID(item_id)
+    household_id = UUID(user["household_id"])
+    item_uuid = item_id
     result = await db.execute(
         select(PantryItem).where(
             PantryItem.id == item_uuid,
