@@ -13,6 +13,7 @@ from app.models import PantryItem
 from app.schemas import (
     CreatePantryItemRequest,
     PantryItemResponse,
+    PantryItemSortBy,
     UpdatePantryItemRequest,
 )
 
@@ -40,7 +41,7 @@ def _to_response(item: PantryItem) -> PantryItemResponse:
 async def list_items(
     search: Optional[str] = Query(None),
     categoryId: Optional[str] = Query(None),
-    sortBy: Optional[str] = Query("name"),
+    sortBy: PantryItemSortBy = Query(PantryItemSortBy.NAME),
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -53,9 +54,9 @@ async def list_items(
     if categoryId:
         query = query.where(PantryItem.category_id == UUID(categoryId))
 
-    if sortBy == "quantity":
+    if sortBy == PantryItemSortBy.QUANTITY:
         query = query.order_by(PantryItem.quantity)
-    elif sortBy == "expirationDate":
+    elif sortBy == PantryItemSortBy.EXPIRATION_DATE:
         query = query.order_by(PantryItem.expiration_date)
     else:
         query = query.order_by(PantryItem.name)
