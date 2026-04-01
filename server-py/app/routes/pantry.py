@@ -48,7 +48,8 @@ async def list_items(
     query = select(PantryItem).where(PantryItem.household_id == household_id)
 
     if search:
-        query = query.where(PantryItem.name.ilike(f"%{search}%"))
+        escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        query = query.where(PantryItem.name.ilike(f"%{escaped}%"))
     if categoryId:
         query = query.where(PantryItem.category_id == UUID(categoryId))
 
