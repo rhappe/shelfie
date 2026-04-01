@@ -1,3 +1,4 @@
+import enum
 import uuid
 
 from sqlalchemy import (
@@ -30,6 +31,11 @@ class Household(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
+class Role(enum.StrEnum):
+    ADMIN = "ADMIN"
+    USER = "USER"
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -42,7 +48,7 @@ class User(Base):
         ForeignKey("households.id", ondelete="CASCADE"),
         nullable=False,
     )
-    role = Column(String(16), nullable=False, default="OWNER")
+    role = Column(String(16), nullable=False, default=Role.ADMIN)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 

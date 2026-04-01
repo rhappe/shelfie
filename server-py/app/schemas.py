@@ -1,10 +1,17 @@
 from __future__ import annotations
 
 import datetime
+import enum
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, field_validator
 from pydantic.alias_generators import to_camel
+
+
+class PantryItemSortBy(str, enum.Enum):
+    NAME = "name"
+    QUANTITY = "quantity"
+    EXPIRATION_DATE = "expirationDate"
 
 
 class CamelModel(BaseModel):
@@ -20,6 +27,7 @@ class RegisterRequest(CamelModel):
     username: str
     password: str
     display_name: str
+    invite_code: Optional[str] = None
 
     @field_validator("username")
     @classmethod

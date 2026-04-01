@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import create_token, hash_password, verify_password
 from app.database import get_db
-from app.models import Household, User
+from app.models import Household, Role, User
 from app.schemas import AuthResponse, LoginRequest, RegisterRequest
 
 router = APIRouter(prefix="/v1/auth", tags=["auth"])
@@ -23,20 +23,34 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
             content={"error": "Username already taken"},
         )
 
-    invite_code = uuid.uuid4().hex[:16]
-    household = Household(
-        name=f"{request.display_name}'s Household",
-        invite_code=invite_code,
-    )
-    db.add(household)
-    await db.flush()
+    if request.invite_code:
+        # Join existing household
+        result = await db.execute(
+            select(Household).where(Household.invite_code == request.invite_code)
+        )
+        household = result.scalars().first()
+        if household is None:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"error": "Invalid invite code"},
+            )
+        role = Role.USER
+    else:
+        # Create new household
+        household = Household(
+            name=f"{request.display_name}'s Household",
+            invite_code=uuid.uuid4().hex[:16],
+        )
+        db.add(household)
+        await db.flush()
+        role = Role.ADMIN
 
     user = User(
         username=request.username,
         display_name=request.display_name,
         password_hash=hash_password(password=request.password),
         household_id=household.id,
-        role="OWNER",
+        role=role,
     )
     db.add(user)
     await db.commit()
