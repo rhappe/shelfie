@@ -20,12 +20,11 @@ def verify_password(plain: str, hashed: str) -> bool:
     return bcrypt.checkpw(password=plain.encode(), hashed_password=hashed.encode())
 
 
-def create_token(user_id: str, household_id: str, email: str) -> str:
+def create_token(user_id: str, household_id: str) -> str:
     expire = datetime.now(timezone.utc) + timedelta(days=settings.jwt_expiry_days)
     payload = {
         "userId": user_id,
         "householdId": household_id,
-        "email": email,
         "exp": expire,
     }
     return jwt.encode(payload=payload, key=settings.jwt_secret, algorithm=ALGORITHM)
@@ -41,9 +40,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         payload = jwt.decode(jwt=token, key=settings.jwt_secret, algorithms=[ALGORITHM])
         user_id: str | None = payload.get("userId")
         household_id: str | None = payload.get("householdId")
-        email: str | None = payload.get("email")
         if user_id is None:
             raise credentials_exception
-        return {"user_id": user_id, "household_id": household_id, "email": email}
+        return {"user_id": user_id, "household_id": household_id}
     except jwt.PyJWTError:
         raise credentials_exception

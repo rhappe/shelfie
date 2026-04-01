@@ -17,15 +17,15 @@ class CamelModel(BaseModel):
 # ── Auth ─────────────────────────────────────────────────────────────────
 
 class RegisterRequest(CamelModel):
-    email: str
+    username: str
     password: str
     display_name: str
 
-    @field_validator("email")
+    @field_validator("username")
     @classmethod
-    def email_must_not_be_blank(cls, v: str) -> str:
+    def username_must_not_be_blank(cls, v: str) -> str:
         if not v or not v.strip():
-            raise ValueError("Email must not be blank")
+            raise ValueError("Username must not be blank")
         return v
 
     @field_validator("password")
@@ -44,14 +44,14 @@ class RegisterRequest(CamelModel):
 
 
 class LoginRequest(CamelModel):
-    email: str
+    username: str
     password: str
 
 
 class AuthResponse(CamelModel):
     token: str
     user_id: str
-    email: str
+    username: str
     display_name: str
     household_id: str
 

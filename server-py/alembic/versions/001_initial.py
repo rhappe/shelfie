@@ -35,7 +35,7 @@ def upgrade() -> None:
     op.create_table(
         "users",
         sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("email", sa.String(255), nullable=False),
+        sa.Column("username", sa.String(255), nullable=False),
         sa.Column("display_name", sa.String(255), nullable=False),
         sa.Column("password_hash", sa.String(255), nullable=False),
         sa.Column("household_id", postgresql.UUID(as_uuid=True), nullable=False),
@@ -49,7 +49,7 @@ def upgrade() -> None:
             ["household_id"], ["households.id"], ondelete="CASCADE"
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("email"),
+        sa.UniqueConstraint("username"),
     )
 
     op.create_table(

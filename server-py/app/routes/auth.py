@@ -15,12 +15,12 @@ router = APIRouter(prefix="/v1/auth", tags=["auth"])
 
 @router.post("/register", status_code=status.HTTP_201_CREATED, response_model=AuthResponse, response_model_by_alias=True)
 async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db)):
-    # Check for existing email
-    result = await db.execute(select(User).where(User.email == request.email))
+    # Check for existing username
+    result = await db.execute(select(User).where(User.username == request.username))
     if result.scalars().first() is not None:
         return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
-            content={"error": "Email already registered"},
+            content={"error": "Username already taken"},
         )
 
     invite_code = uuid.uuid4().hex[:16]
@@ -32,7 +32,7 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
     await db.flush()
 
     user = User(
-        email=request.email,
+        username=request.username,
         display_name=request.display_name,
         password_hash=hash_password(password=request.password),
         household_id=household.id,
@@ -41,11 +41,11 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
     db.add(user)
     await db.commit()
 
-    token = create_token(user_id=str(user.id), household_id=str(household.id), email=user.email)
+    token = create_token(user_id=str(user.id), household_id=str(household.id))
     return AuthResponse(
         token=token,
         user_id=str(user.id),
-        email=user.email,
+        username=user.username,
         display_name=user.display_name,
         household_id=str(household.id),
     )
@@ -53,20 +53,20 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
 
 @router.post("/login", response_model=AuthResponse, response_model_by_alias=True)
 async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.email == request.email))
+    result = await db.execute(select(User).where(User.username == request.username))
     user = result.scalars().first()
 
     if user is None or not verify_password(plain=request.password, hashed=user.password_hash):
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"error": "Invalid email or password"},
+            content={"error": "Invalid username or password"},
         )
 
-    token = create_token(user_id=str(user.id), household_id=str(user.household_id), email=user.email)
+    token = create_token(user_id=str(user.id), household_id=str(user.household_id))
     return AuthResponse(
         token=token,
         user_id=str(user.id),
-        email=user.email,
+        username=user.username,
         display_name=user.display_name,
         household_id=str(user.household_id),
     )
