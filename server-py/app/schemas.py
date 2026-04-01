@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 from pydantic.alias_generators import to_camel
 
 
@@ -20,6 +20,27 @@ class RegisterRequest(CamelModel):
     email: str
     password: str
     display_name: str
+
+    @field_validator("email")
+    @classmethod
+    def email_must_not_be_blank(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Email must not be blank")
+        return v
+
+    @field_validator("password")
+    @classmethod
+    def password_min_length(cls, v: str) -> str:
+        if len(v) < 6:
+            raise ValueError("Password must be at least 6 characters")
+        return v
+
+    @field_validator("display_name")
+    @classmethod
+    def display_name_must_not_be_blank(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Display name must not be blank")
+        return v
 
 
 class LoginRequest(CamelModel):

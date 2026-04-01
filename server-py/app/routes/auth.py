@@ -15,22 +15,6 @@ router = APIRouter(prefix="/v1/auth", tags=["auth"])
 
 @router.post("/register", status_code=status.HTTP_201_CREATED, response_model=AuthResponse, response_model_by_alias=True)
 async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db)):
-    if not request.email or not request.email.strip():
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            content={"error": "Email must not be blank"},
-        )
-    if len(request.password) < 6:
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            content={"error": "Password must be at least 6 characters"},
-        )
-    if not request.display_name or not request.display_name.strip():
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            content={"error": "Display name must not be blank"},
-        )
-
     # Check for existing email
     result = await db.execute(select(User).where(User.email == request.email))
     if result.scalars().first() is not None:
