@@ -20,11 +20,11 @@ class AuthViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(AuthUiState(isAuthenticated = TokenStorage.getToken() != null))
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
-    fun login(email: String, password: String) {
+    fun login(username: String, password: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                val response = ApiClient.login(LoginRequest(email, password))
+                val response = ApiClient.login(LoginRequest(username, password))
                 TokenStorage.setToken(response.token)
                 TokenStorage.setHouseholdId(response.householdId)
                 _uiState.value = _uiState.value.copy(isLoading = false, isAuthenticated = true)
@@ -34,11 +34,11 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    fun register(email: String, password: String, displayName: String) {
+    fun register(username: String, password: String, displayName: String, inviteCode: String? = null) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                val response = ApiClient.register(RegisterRequest(email, password, displayName))
+                val response = ApiClient.register(RegisterRequest(username, password, displayName, inviteCode))
                 TokenStorage.setToken(response.token)
                 TokenStorage.setHouseholdId(response.householdId)
                 _uiState.value = _uiState.value.copy(isLoading = false, isAuthenticated = true)

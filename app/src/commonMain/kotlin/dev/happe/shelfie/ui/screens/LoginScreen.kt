@@ -20,7 +20,7 @@ fun LoginScreen(
     onNavigateToRegister: () -> Unit,
 ) {
     val uiState by authViewModel.uiState.collectAsState()
-    var email by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     LaunchedEffect(uiState.isAuthenticated) {
@@ -54,12 +54,11 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(48.dp))
 
         OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
+            value = username,
+            onValueChange = { username = it },
+            label = { Text("Username") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next,
             ),
             modifier = Modifier.fillMaxWidth(),
@@ -92,8 +91,8 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { authViewModel.login(email.trim(), password) },
-            enabled = !uiState.isLoading && email.isNotBlank() && password.isNotBlank(),
+            onClick = { authViewModel.login(username.trim(), password) },
+            enabled = !uiState.isLoading && username.isNotBlank() && password.isNotBlank(),
             modifier = Modifier.fillMaxWidth().height(48.dp),
         ) {
             if (uiState.isLoading) {

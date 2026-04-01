@@ -20,9 +20,10 @@ fun RegisterScreen(
     onNavigateToLogin: () -> Unit,
 ) {
     val uiState by authViewModel.uiState.collectAsState()
-    var email by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var displayName by remember { mutableStateOf("") }
+    var inviteCode by remember { mutableStateOf("") }
 
     LaunchedEffect(uiState.isAuthenticated) {
         if (uiState.isAuthenticated) {
@@ -58,12 +59,11 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
+            value = username,
+            onValueChange = { username = it },
+            label = { Text("Username") },
             singleLine = true,
             keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Next,
             ),
             modifier = Modifier.fillMaxWidth(),
@@ -84,6 +84,19 @@ fun RegisterScreen(
             modifier = Modifier.fillMaxWidth(),
         )
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = inviteCode,
+            onValueChange = { inviteCode = it },
+            label = { Text("Invite Code (optional)") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Done,
+            ),
+            modifier = Modifier.fillMaxWidth(),
+        )
+
         if (uiState.error != null) {
             Spacer(modifier = Modifier.height(12.dp))
             Text(
@@ -96,8 +109,15 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { authViewModel.register(email.trim(), password, displayName.trim()) },
-            enabled = !uiState.isLoading && email.isNotBlank() && password.isNotBlank() && displayName.isNotBlank(),
+            onClick = {
+                authViewModel.register(
+                    username.trim(),
+                    password,
+                    displayName.trim(),
+                    inviteCode.trim().ifEmpty { null },
+                )
+            },
+            enabled = !uiState.isLoading && username.isNotBlank() && password.isNotBlank() && displayName.isNotBlank(),
             modifier = Modifier.fillMaxWidth().height(48.dp),
         ) {
             if (uiState.isLoading) {
