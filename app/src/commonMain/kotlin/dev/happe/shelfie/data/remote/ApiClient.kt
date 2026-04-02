@@ -19,6 +19,9 @@ object ApiClient {
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true; isLenient = true })
         }
+        defaultRequest {
+            contentType(ContentType.Application.Json)
+        }
         HttpResponseValidator {
             validateResponse { response ->
                 if (!response.status.isSuccess()) {
@@ -36,14 +39,12 @@ object ApiClient {
     // Auth
     suspend fun register(request: RegisterRequest): AuthResponse {
         return client.post("$baseUrl/v1/auth/register") {
-            contentType(ContentType.Application.Json)
             setBody(request)
         }.body()
     }
 
     suspend fun login(request: LoginRequest): AuthResponse {
         return client.post("$baseUrl/v1/auth/login") {
-            contentType(ContentType.Application.Json)
             setBody(request)
         }.body()
     }
@@ -56,7 +57,6 @@ object ApiClient {
     suspend fun createCategory(request: CreateCategoryRequest): Category {
         return client.post("$baseUrl/v1/categories") {
             withAuth()
-            contentType(ContentType.Application.Json)
             setBody(request)
         }.body()
     }
@@ -64,7 +64,6 @@ object ApiClient {
     suspend fun updateCategory(id: String, request: UpdateCategoryRequest): Category {
         return client.put("$baseUrl/v1/categories/$id") {
             withAuth()
-            contentType(ContentType.Application.Json)
             setBody(request)
         }.body()
     }
@@ -90,7 +89,6 @@ object ApiClient {
     suspend fun createPantryItem(request: CreatePantryItemRequest): PantryItem {
         return client.post("$baseUrl/v1/pantry/items") {
             withAuth()
-            contentType(ContentType.Application.Json)
             setBody(request)
         }.body()
     }
@@ -98,7 +96,6 @@ object ApiClient {
     suspend fun updatePantryItem(id: String, request: UpdatePantryItemRequest): PantryItem {
         return client.put("$baseUrl/v1/pantry/items/$id") {
             withAuth()
-            contentType(ContentType.Application.Json)
             setBody(request)
         }.body()
     }
