@@ -20,19 +20,31 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.happe.shelfie.shared.Category
+import dev.happe.shelfie.viewmodel.CategoryViewEvent
 import dev.happe.shelfie.viewmodel.CategoryViewModel
 import dev.happe.shelfie.viewmodel.CategoryViewState
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryScreen(
     viewModel: CategoryViewModel,
     onNavigateBack: () -> Unit,
 ) {
     val viewState by viewModel.viewState.collectAsStateWithLifecycle()
-    var showDialog by remember { mutableStateOf(false) }
-    var editingCategory by remember { mutableStateOf<Category?>(null) }
 
+    CategoryScreen(
+        viewState = viewState,
+        onEvent = viewModel::handleEvent,
+        onNavigateBack = onNavigateBack,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CategoryScreen(
+    viewState: CategoryViewState,
+    onEvent: (CategoryViewEvent) -> Unit,
+    onNavigateBack: () -> Unit,
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -45,10 +57,7 @@ fun CategoryScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = {
-                editingCategory = null
-                showDialog = true
-            }) {
+            FloatingActionButton(onClick = { onEvent(CategoryViewEvent.AddCategory) }) {
                 Icon(Icons.Default.Add, contentDescription = "Add category")
             }
         },
@@ -103,43 +112,39 @@ fun CategoryScreen(
                         items(state.categories, key = { it.id }) { category ->
                             CategoryCard(
                                 category = category,
-                                onEdit = {
-                                    editingCategory = category
-                                    showDialog = true
-                                },
-                                onDelete = { viewModel.deleteCategory(category.id) },
+                                showDeleteConfirm = state.deletingCategoryId == category.id,
+                                onEdit = { onEvent(CategoryViewEvent.EditCategory(category)) },
+                                onRequestDelete = { onEvent(CategoryViewEvent.RequestDeleteCategory(category.id)) },
+                                onConfirmDelete = { onEvent(CategoryViewEvent.ConfirmDeleteCategory) },
+                                onDismissDelete = { onEvent(CategoryViewEvent.DismissDeleteConfirm) },
                             )
                         }
                     }
                 }
+
+                if (state.showDialog) {
+                    CategoryDialog(
+                        category = state.editingCategory,
+                        onDismiss = { onEvent(CategoryViewEvent.DismissDialog) },
+                        onSave = { name, description, color ->
+                            onEvent(CategoryViewEvent.SaveCategory(name, description, color))
+                        },
+                    )
+                }
             }
         }
-    }
-
-    if (showDialog) {
-        CategoryDialog(
-            category = editingCategory,
-            onDismiss = { showDialog = false },
-            onSave = { name, description, color ->
-                if (editingCategory != null) {
-                    viewModel.updateCategory(editingCategory!!.id, name, description, color)
-                } else {
-                    viewModel.createCategory(name, description, color)
-                }
-                showDialog = false
-            },
-        )
     }
 }
 
 @Composable
 private fun CategoryCard(
     category: Category,
+    showDeleteConfirm: Boolean,
     onEdit: () -> Unit,
-    onDelete: () -> Unit,
+    onRequestDelete: () -> Unit,
+    onConfirmDelete: () -> Unit,
+    onDismissDelete: () -> Unit,
 ) {
-    var showDeleteConfirm by remember { mutableStateOf(false) }
-
     Card(
         modifier = Modifier.fillMaxWidth(),
     ) {
@@ -149,7 +154,6 @@ private fun CategoryCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Color swatch
             if (category.color != null) {
                 Box(
                     modifier = Modifier
@@ -180,7 +184,7 @@ private fun CategoryCard(
             IconButton(onClick = onEdit) {
                 Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
             }
-            IconButton(onClick = { showDeleteConfirm = true }) {
+            IconButton(onClick = onRequestDelete) {
                 Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
             }
         }
@@ -188,19 +192,16 @@ private fun CategoryCard(
 
     if (showDeleteConfirm) {
         AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
+            onDismissRequest = onDismissDelete,
             title = { Text("Delete Category") },
             text = { Text("Are you sure you want to delete \"${category.name}\"?") },
             confirmButton = {
-                TextButton(onClick = {
-                    showDeleteConfirm = false
-                    onDelete()
-                }) {
+                TextButton(onClick = onConfirmDelete) {
                     Text("Delete", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) {
+                TextButton(onClick = onDismissDelete) {
                     Text("Cancel")
                 }
             },
