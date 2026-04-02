@@ -1,7 +1,7 @@
 package dev.happe.shelfie.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -36,7 +36,7 @@ fun AppNavigation(
     categoryRepository: CategoryRepository,
     pantryRepository: PantryRepository,
 ) {
-    val authState by authViewModel.viewState.collectAsState()
+    val authState by authViewModel.viewState.collectAsStateWithLifecycle()
 
     val isAuthenticated = authState is AuthViewState.Content && (authState as AuthViewState.Content).isAuthenticated
     val startDestination = if (isAuthenticated) Screen.Pantry.route else Screen.Login.route
