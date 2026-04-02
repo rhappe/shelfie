@@ -1,16 +1,15 @@
 package dev.happe.shelfie.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import dev.happe.shelfie.data.repository.CategoryRepository
-import dev.happe.shelfie.data.repository.PantryRepository
+import dev.happe.shelfie.di.AppGraph
 import dev.happe.shelfie.ui.screens.AddEditPantryItemScreen
 import dev.happe.shelfie.ui.screens.CategoryScreen
 import dev.happe.shelfie.ui.screens.LoginScreen
@@ -37,9 +36,8 @@ sealed class Screen(val route: String) {
 @Composable
 fun AppNavigation(
     navController: NavHostController,
+    graph: AppGraph,
     authViewModel: AuthViewModel,
-    categoryRepository: CategoryRepository,
-    pantryRepository: PantryRepository,
 ) {
     val authState by authViewModel.viewState.collectAsStateWithLifecycle()
 
@@ -77,7 +75,7 @@ fun AppNavigation(
 
         composable(Screen.Pantry.route) {
             PantryScreen(
-                viewModel = viewModel { PantryViewModel(pantryRepository, categoryRepository) },
+                viewModel = viewModel { PantryViewModel(graph) },
                 onAddItem = { navController.navigate(Screen.AddPantryItem.route) },
                 onEditItem = { itemId -> navController.navigate(Screen.EditPantryItem.createRoute(itemId)) },
                 onNavigateToCategories = { navController.navigate(Screen.Categories.route) },
@@ -92,7 +90,7 @@ fun AppNavigation(
 
         composable(Screen.AddPantryItem.route) {
             AddEditPantryItemScreen(
-                viewModel = viewModel { AddEditItemViewModel(pantryRepository, categoryRepository) },
+                viewModel = viewModel { AddEditItemViewModel(graph) },
                 onNavigateBack = { navController.popBackStack() },
             )
         }
@@ -104,14 +102,14 @@ fun AppNavigation(
             val itemId: String = backStackEntry.savedStateHandle.get<String>("itemId")
                 ?: return@composable
             AddEditPantryItemScreen(
-                viewModel = viewModel { AddEditItemViewModel(pantryRepository, categoryRepository, itemId) },
+                viewModel = viewModel { AddEditItemViewModel(graph, itemId) },
                 onNavigateBack = { navController.popBackStack() },
             )
         }
 
         composable(Screen.Categories.route) {
             CategoryScreen(
-                viewModel = viewModel { CategoryViewModel(categoryRepository) },
+                viewModel = viewModel { CategoryViewModel(graph) },
                 onNavigateBack = { navController.popBackStack() },
             )
         }

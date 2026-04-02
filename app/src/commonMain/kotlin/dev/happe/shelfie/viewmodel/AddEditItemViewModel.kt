@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.happe.shelfie.data.repository.CategoryRepository
 import dev.happe.shelfie.data.repository.PantryRepository
+import dev.happe.shelfie.di.AppGraph
 import dev.happe.shelfie.shared.Category
 import dev.happe.shelfie.shared.CreatePantryItemRequest
 import dev.happe.shelfie.shared.UpdatePantryItemRequest
@@ -77,6 +78,7 @@ class AddEditItemViewModel(
     private val categoryRepository: CategoryRepository,
     private val itemId: String? = null,
 ) : ViewModel() {
+    constructor(graph: AppGraph, itemId: String? = null) : this(graph.pantryRepository, graph.categoryRepository, itemId)
 
     private val _uiState = MutableStateFlow(AddEditItemUiState())
     private val _effects = Channel<AddEditItemViewEffect>(Channel.BUFFERED)

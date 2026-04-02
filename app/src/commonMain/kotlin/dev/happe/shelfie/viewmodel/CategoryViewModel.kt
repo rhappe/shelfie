@@ -3,6 +3,7 @@ package dev.happe.shelfie.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.happe.shelfie.data.repository.CategoryRepository
+import dev.happe.shelfie.di.AppGraph
 import dev.happe.shelfie.shared.Category
 import dev.happe.shelfie.shared.CreateCategoryRequest
 import dev.happe.shelfie.shared.UpdateCategoryRequest
@@ -46,6 +47,7 @@ private data class CategoryUiState(
 class CategoryViewModel(
     private val repository: CategoryRepository,
 ) : ViewModel() {
+    constructor(graph: AppGraph) : this(graph.categoryRepository)
     private val _uiState = MutableStateFlow(CategoryUiState())
 
     val viewState: StateFlow<CategoryViewState> = _uiState.map { state ->

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.happe.shelfie.data.repository.CategoryRepository
 import dev.happe.shelfie.data.repository.PantryRepository
+import dev.happe.shelfie.di.AppGraph
 import dev.happe.shelfie.shared.Category
 import dev.happe.shelfie.shared.PantryItem
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,6 +55,7 @@ class PantryViewModel(
     private val pantryRepository: PantryRepository,
     private val categoryRepository: CategoryRepository,
 ) : ViewModel() {
+    constructor(graph: AppGraph) : this(graph.pantryRepository, graph.categoryRepository)
 
     private val _uiState = MutableStateFlow(PantryUiState())
 

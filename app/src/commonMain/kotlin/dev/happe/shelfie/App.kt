@@ -17,14 +17,11 @@ fun App(tokenStorage: TokenStorage) {
 
     MaterialTheme {
         val navController = rememberNavController()
-        val authViewModel: AuthViewModel = viewModel {
-            AuthViewModel(graph.tokenStorage, graph.authApi)
-        }
+        val authViewModel: AuthViewModel = viewModel { AuthViewModel(graph) }
         AppNavigation(
             navController = navController,
+            graph = graph,
             authViewModel = authViewModel,
-            categoryRepository = graph.categoryRepository,
-            pantryRepository = graph.pantryRepository,
         )
     }
 }

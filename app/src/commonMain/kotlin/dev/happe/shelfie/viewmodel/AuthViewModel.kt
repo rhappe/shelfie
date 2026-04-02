@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.happe.shelfie.data.local.TokenStorage
 import dev.happe.shelfie.data.remote.AuthApi
+import dev.happe.shelfie.di.AppGraph
 import dev.happe.shelfie.shared.LoginRequest
 import dev.happe.shelfie.shared.RegisterRequest
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,6 +41,7 @@ class AuthViewModel(
     private val tokenStorage: TokenStorage,
     private val authApi: AuthApi,
 ) : ViewModel() {
+    constructor(graph: AppGraph) : this(graph.tokenStorage, graph.authApi)
     private val _uiState = MutableStateFlow(AuthUiState(isAuthenticated = tokenStorage.getToken() != null))
 
     val viewState: StateFlow<AuthViewState> = _uiState.map { state ->
