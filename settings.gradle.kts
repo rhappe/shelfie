@@ -18,4 +18,3 @@ dependencyResolutionManagement {
 rootProject.name = "shelfie"
 include(":app")
 include(":shared")
-include(":server")
