@@ -11,6 +11,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import dev.happe.shelfie.viewmodel.AuthViewEvent
 import dev.happe.shelfie.viewmodel.AuthViewModel
 import dev.happe.shelfie.viewmodel.AuthViewState
 
@@ -21,8 +22,6 @@ fun LoginScreen(
     onNavigateToRegister: () -> Unit,
 ) {
     val viewState by authViewModel.viewState.collectAsStateWithLifecycle()
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
 
     LaunchedEffect(viewState) {
         if (viewState is AuthViewState.Content && (viewState as AuthViewState.Content).isAuthenticated) {
@@ -30,8 +29,24 @@ fun LoginScreen(
         }
     }
 
+    LoginScreen(
+        viewState = viewState,
+        onEvent = authViewModel::handleEvent,
+        onNavigateToRegister = onNavigateToRegister,
+    )
+}
+
+@Composable
+private fun LoginScreen(
+    viewState: AuthViewState,
+    onEvent: (AuthViewEvent) -> Unit,
+    onNavigateToRegister: () -> Unit,
+) {
     val isLoading = viewState is AuthViewState.Loading
     val error = (viewState as? AuthViewState.Error)?.message
+
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -94,7 +109,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { authViewModel.login(username.trim(), password) },
+            onClick = { onEvent(AuthViewEvent.Login(username.trim(), password)) },
             enabled = !isLoading && username.isNotBlank() && password.isNotBlank(),
             modifier = Modifier.fillMaxWidth().height(48.dp),
         ) {

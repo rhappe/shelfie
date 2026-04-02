@@ -11,6 +11,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import dev.happe.shelfie.viewmodel.AuthViewEvent
 import dev.happe.shelfie.viewmodel.AuthViewModel
 import dev.happe.shelfie.viewmodel.AuthViewState
 
@@ -21,10 +22,6 @@ fun RegisterScreen(
     onNavigateToLogin: () -> Unit,
 ) {
     val viewState by authViewModel.viewState.collectAsStateWithLifecycle()
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var displayName by remember { mutableStateOf("") }
-    var inviteCode by remember { mutableStateOf("") }
 
     LaunchedEffect(viewState) {
         if (viewState is AuthViewState.Content && (viewState as AuthViewState.Content).isAuthenticated) {
@@ -32,8 +29,26 @@ fun RegisterScreen(
         }
     }
 
+    RegisterScreen(
+        viewState = viewState,
+        onEvent = authViewModel::handleEvent,
+        onNavigateToLogin = onNavigateToLogin,
+    )
+}
+
+@Composable
+private fun RegisterScreen(
+    viewState: AuthViewState,
+    onEvent: (AuthViewEvent) -> Unit,
+    onNavigateToLogin: () -> Unit,
+) {
     val isLoading = viewState is AuthViewState.Loading
     val error = (viewState as? AuthViewState.Error)?.message
+
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var displayName by remember { mutableStateOf("") }
+    var inviteCode by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -113,12 +128,12 @@ fun RegisterScreen(
 
         Button(
             onClick = {
-                authViewModel.register(
+                onEvent(AuthViewEvent.Register(
                     username.trim(),
                     password,
                     displayName.trim(),
                     inviteCode.trim().ifEmpty { null },
-                )
+                ))
             },
             enabled = !isLoading && username.isNotBlank() && password.isNotBlank() && displayName.isNotBlank(),
             modifier = Modifier.fillMaxWidth().height(48.dp),

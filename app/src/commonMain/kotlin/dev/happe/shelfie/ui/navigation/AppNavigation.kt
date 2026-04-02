@@ -13,6 +13,7 @@ import dev.happe.shelfie.data.repository.CategoryRepository
 import dev.happe.shelfie.data.repository.PantryRepository
 import dev.happe.shelfie.ui.screens.*
 import dev.happe.shelfie.viewmodel.AddEditItemViewModel
+import dev.happe.shelfie.viewmodel.AuthViewEvent
 import dev.happe.shelfie.viewmodel.AuthViewModel
 import dev.happe.shelfie.viewmodel.AuthViewState
 import dev.happe.shelfie.viewmodel.CategoryViewModel
@@ -77,7 +78,7 @@ fun AppNavigation(
                 onEditItem = { itemId -> navController.navigate(Screen.EditPantryItem.createRoute(itemId)) },
                 onNavigateToCategories = { navController.navigate(Screen.Categories.route) },
                 onLogout = {
-                    authViewModel.logout()
+                    authViewModel.handleEvent(AuthViewEvent.Logout)
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }

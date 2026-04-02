@@ -18,6 +18,17 @@ sealed interface AuthViewState {
     data class Content(val isAuthenticated: Boolean) : AuthViewState
 }
 
+sealed interface AuthViewEvent {
+    data class Login(val username: String, val password: String) : AuthViewEvent
+    data class Register(
+        val username: String,
+        val password: String,
+        val displayName: String,
+        val inviteCode: String?,
+    ) : AuthViewEvent
+    data object Logout : AuthViewEvent
+}
+
 private data class AuthUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
@@ -38,7 +49,15 @@ class AuthViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AuthViewState.Content(isAuthenticated = _uiState.value.isAuthenticated))
 
-    fun login(username: String, password: String) {
+    fun handleEvent(event: AuthViewEvent) {
+        when (event) {
+            is AuthViewEvent.Login -> login(event.username, event.password)
+            is AuthViewEvent.Register -> register(event.username, event.password, event.displayName, event.inviteCode)
+            is AuthViewEvent.Logout -> logout()
+        }
+    }
+
+    private fun login(username: String, password: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
@@ -52,7 +71,7 @@ class AuthViewModel(
         }
     }
 
-    fun register(username: String, password: String, displayName: String, inviteCode: String? = null) {
+    private fun register(username: String, password: String, displayName: String, inviteCode: String?) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
@@ -66,7 +85,7 @@ class AuthViewModel(
         }
     }
 
-    fun logout() {
+    private fun logout() {
         tokenStorage.clearToken()
         _uiState.value = AuthUiState(isAuthenticated = false)
     }
