@@ -11,6 +11,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import dev.happe.shelfie.viewmodel.AuthViewModel
+import dev.happe.shelfie.viewmodel.AuthViewState
 
 @Composable
 fun RegisterScreen(
@@ -18,17 +19,20 @@ fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
     onNavigateToLogin: () -> Unit,
 ) {
-    val uiState by authViewModel.uiState.collectAsState()
+    val viewState by authViewModel.viewState.collectAsState()
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var displayName by remember { mutableStateOf("") }
     var inviteCode by remember { mutableStateOf("") }
 
-    LaunchedEffect(uiState.isAuthenticated) {
-        if (uiState.isAuthenticated) {
+    LaunchedEffect(viewState) {
+        if (viewState is AuthViewState.Content && (viewState as AuthViewState.Content).isAuthenticated) {
             onRegisterSuccess()
         }
     }
+
+    val isLoading = viewState is AuthViewState.Loading
+    val error = (viewState as? AuthViewState.Error)?.message
 
     Column(
         modifier = Modifier
@@ -95,10 +99,10 @@ fun RegisterScreen(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        if (uiState.error != null) {
+        if (error != null) {
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = uiState.error!!,
+                text = error,
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -115,10 +119,10 @@ fun RegisterScreen(
                     inviteCode.trim().ifEmpty { null },
                 )
             },
-            enabled = !uiState.isLoading && username.isNotBlank() && password.isNotBlank() && displayName.isNotBlank(),
+            enabled = !isLoading && username.isNotBlank() && password.isNotBlank() && displayName.isNotBlank(),
             modifier = Modifier.fillMaxWidth().height(48.dp),
         ) {
-            if (uiState.isLoading) {
+            if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
                     color = MaterialTheme.colorScheme.onPrimary,

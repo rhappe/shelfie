@@ -6,11 +6,32 @@ import dev.happe.shelfie.data.repository.CategoryRepository
 import dev.happe.shelfie.data.repository.PantryRepository
 import dev.happe.shelfie.shared.*
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-data class AddEditItemUiState(
+sealed interface AddEditItemViewState {
+    data object Loading : AddEditItemViewState
+    data class Error(val message: String) : AddEditItemViewState
+    data class Content(
+        val name: String,
+        val quantity: String,
+        val unit: String,
+        val categoryId: String?,
+        val expirationDate: String?,
+        val lowStockThreshold: String,
+        val notifyOnLowStock: Boolean,
+        val barcode: String?,
+        val categories: List<Category>,
+        val isSaving: Boolean,
+        val savedSuccessfully: Boolean,
+        val validationError: String?,
+    ) : AddEditItemViewState
+}
+
+private data class AddEditItemUiState(
     val name: String = "",
     val quantity: String = "1.0",
     val unit: String = "count",
@@ -24,6 +45,7 @@ data class AddEditItemUiState(
     val isSaving: Boolean = false,
     val error: String? = null,
     val savedSuccessfully: Boolean = false,
+    val validationError: String? = null,
 )
 
 class AddEditItemViewModel(
@@ -32,7 +54,27 @@ class AddEditItemViewModel(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddEditItemUiState())
-    val uiState: StateFlow<AddEditItemUiState> = _uiState.asStateFlow()
+
+    val viewState: StateFlow<AddEditItemViewState> = _uiState.map { state ->
+        when {
+            state.isLoading -> AddEditItemViewState.Loading
+            state.error != null -> AddEditItemViewState.Error(state.error)
+            else -> AddEditItemViewState.Content(
+                name = state.name,
+                quantity = state.quantity,
+                unit = state.unit,
+                categoryId = state.categoryId,
+                expirationDate = state.expirationDate,
+                lowStockThreshold = state.lowStockThreshold,
+                notifyOnLowStock = state.notifyOnLowStock,
+                barcode = state.barcode,
+                categories = state.categories,
+                isSaving = state.isSaving,
+                savedSuccessfully = state.savedSuccessfully,
+                validationError = state.validationError,
+            )
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AddEditItemViewState.Loading)
 
     private var editingItemId: String? = null
 
@@ -73,7 +115,7 @@ class AddEditItemViewModel(
     }
 
     fun updateName(name: String) {
-        _uiState.value = _uiState.value.copy(name = name)
+        _uiState.value = _uiState.value.copy(name = name, validationError = null)
     }
 
     fun updateQuantity(qty: String) {
@@ -103,11 +145,11 @@ class AddEditItemViewModel(
     fun save() {
         val state = _uiState.value
         if (state.name.isBlank()) {
-            _uiState.value = state.copy(error = "Name is required")
+            _uiState.value = state.copy(validationError = "Name is required")
             return
         }
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isSaving = true, error = null)
+            _uiState.value = _uiState.value.copy(isSaving = true, validationError = null)
             try {
                 val qty = state.quantity.toDoubleOrNull() ?: 1.0
                 val threshold = state.lowStockThreshold.toDoubleOrNull() ?: 0.0

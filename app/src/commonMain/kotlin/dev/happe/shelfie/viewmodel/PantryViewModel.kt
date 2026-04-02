@@ -6,14 +6,28 @@ import dev.happe.shelfie.data.repository.CategoryRepository
 import dev.happe.shelfie.data.repository.PantryRepository
 import dev.happe.shelfie.shared.*
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-data class PantryUiState(
+sealed interface PantryViewState {
+    data object Loading : PantryViewState
+    data class Error(val message: String) : PantryViewState
+    data class Content(
+        val items: List<PantryItem>,
+        val categories: List<Category>,
+        val searchQuery: String,
+        val selectedCategoryId: String?,
+        val sortBy: String,
+    ) : PantryViewState
+}
+
+private data class PantryUiState(
     val items: List<PantryItem> = emptyList(),
     val categories: List<Category> = emptyList(),
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val error: String? = null,
     val searchQuery: String = "",
     val selectedCategoryId: String? = null,
@@ -26,7 +40,20 @@ class PantryViewModel(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PantryUiState())
-    val uiState: StateFlow<PantryUiState> = _uiState.asStateFlow()
+
+    val viewState: StateFlow<PantryViewState> = _uiState.map { state ->
+        when {
+            state.isLoading -> PantryViewState.Loading
+            state.error != null -> PantryViewState.Error(state.error)
+            else -> PantryViewState.Content(
+                items = state.items,
+                categories = state.categories,
+                searchQuery = state.searchQuery,
+                selectedCategoryId = state.selectedCategoryId,
+                sortBy = state.sortBy,
+            )
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PantryViewState.Loading)
 
     init {
         loadData()

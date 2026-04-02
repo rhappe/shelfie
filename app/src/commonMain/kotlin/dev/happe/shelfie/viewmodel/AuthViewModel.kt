@@ -6,11 +6,19 @@ import dev.happe.shelfie.data.local.TokenStorage
 import dev.happe.shelfie.data.remote.AuthApi
 import dev.happe.shelfie.shared.*
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-data class AuthUiState(
+sealed interface AuthViewState {
+    data object Loading : AuthViewState
+    data class Error(val message: String) : AuthViewState
+    data class Content(val isAuthenticated: Boolean) : AuthViewState
+}
+
+private data class AuthUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val isAuthenticated: Boolean = false,
@@ -21,7 +29,14 @@ class AuthViewModel(
     private val authApi: AuthApi,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AuthUiState(isAuthenticated = tokenStorage.getToken() != null))
-    val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
+
+    val viewState: StateFlow<AuthViewState> = _uiState.map { state ->
+        when {
+            state.isLoading -> AuthViewState.Loading
+            state.error != null -> AuthViewState.Error(state.error)
+            else -> AuthViewState.Content(isAuthenticated = state.isAuthenticated)
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AuthViewState.Content(isAuthenticated = _uiState.value.isAuthenticated))
 
     fun login(username: String, password: String) {
         viewModelScope.launch {

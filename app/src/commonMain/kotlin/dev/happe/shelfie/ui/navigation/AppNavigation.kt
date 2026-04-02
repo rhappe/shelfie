@@ -12,7 +12,11 @@ import androidx.navigation.navArgument
 import dev.happe.shelfie.data.repository.CategoryRepository
 import dev.happe.shelfie.data.repository.PantryRepository
 import dev.happe.shelfie.ui.screens.*
-import dev.happe.shelfie.viewmodel.*
+import dev.happe.shelfie.viewmodel.AddEditItemViewModel
+import dev.happe.shelfie.viewmodel.AuthViewModel
+import dev.happe.shelfie.viewmodel.AuthViewState
+import dev.happe.shelfie.viewmodel.CategoryViewModel
+import dev.happe.shelfie.viewmodel.PantryViewModel
 
 sealed class Screen(val route: String) {
     data object Login : Screen("login")
@@ -32,9 +36,10 @@ fun AppNavigation(
     categoryRepository: CategoryRepository,
     pantryRepository: PantryRepository,
 ) {
-    val authState by authViewModel.uiState.collectAsState()
+    val authState by authViewModel.viewState.collectAsState()
 
-    val startDestination = if (authState.isAuthenticated) Screen.Pantry.route else Screen.Login.route
+    val isAuthenticated = authState is AuthViewState.Content && (authState as AuthViewState.Content).isAuthenticated
+    val startDestination = if (isAuthenticated) Screen.Pantry.route else Screen.Login.route
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Screen.Login.route) {
