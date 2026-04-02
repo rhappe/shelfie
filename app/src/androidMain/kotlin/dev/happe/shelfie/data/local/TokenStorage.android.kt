@@ -2,6 +2,7 @@ package dev.happe.shelfie.data.local
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 
 actual class TokenStorage(context: Context) {
     private val prefs: SharedPreferences =
@@ -10,17 +11,20 @@ actual class TokenStorage(context: Context) {
     actual fun getToken(): String? = prefs.getString(KEY_TOKEN, null)
 
     actual fun setToken(token: String) {
-        prefs.edit().putString(KEY_TOKEN, token).apply()
+        prefs.edit { putString(KEY_TOKEN, token) }
     }
 
     actual fun clearToken() {
-        prefs.edit().remove(KEY_TOKEN).remove(KEY_HOUSEHOLD_ID).apply()
+        prefs.edit {
+            remove(KEY_TOKEN)
+            remove(KEY_HOUSEHOLD_ID)
+        }
     }
 
     actual fun getHouseholdId(): String? = prefs.getString(KEY_HOUSEHOLD_ID, null)
 
     actual fun setHouseholdId(id: String) {
-        prefs.edit().putString(KEY_HOUSEHOLD_ID, id).apply()
+        prefs.edit { putString(KEY_HOUSEHOLD_ID, id) }
     }
 
     private companion object {
