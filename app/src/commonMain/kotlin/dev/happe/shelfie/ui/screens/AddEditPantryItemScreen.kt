@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import dev.happe.shelfie.viewmodel.AddEditItemViewEffect
 import dev.happe.shelfie.viewmodel.AddEditItemViewModel
 import dev.happe.shelfie.viewmodel.AddEditItemViewState
 
@@ -32,10 +33,11 @@ fun AddEditPantryItemScreen(
         }
     }
 
-    LaunchedEffect(viewState) {
-        val state = viewState
-        if (state is AddEditItemViewState.Content && state.savedSuccessfully) {
-            onNavigateBack()
+    LaunchedEffect(Unit) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                is AddEditItemViewEffect.NavigateBack -> onNavigateBack()
+            }
         }
     }
 

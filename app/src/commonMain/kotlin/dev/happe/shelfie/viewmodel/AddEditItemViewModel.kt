@@ -5,10 +5,12 @@ import androidx.lifecycle.viewModelScope
 import dev.happe.shelfie.data.repository.CategoryRepository
 import dev.happe.shelfie.data.repository.PantryRepository
 import dev.happe.shelfie.shared.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -26,9 +28,12 @@ sealed interface AddEditItemViewState {
         val barcode: String?,
         val categories: List<Category>,
         val isSaving: Boolean,
-        val savedSuccessfully: Boolean,
         val validationError: String?,
     ) : AddEditItemViewState
+}
+
+sealed interface AddEditItemViewEffect {
+    data object NavigateBack : AddEditItemViewEffect
 }
 
 private data class AddEditItemUiState(
@@ -44,7 +49,6 @@ private data class AddEditItemUiState(
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val error: String? = null,
-    val savedSuccessfully: Boolean = false,
     val validationError: String? = null,
 )
 
@@ -54,6 +58,8 @@ class AddEditItemViewModel(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddEditItemUiState())
+    private val _effects = Channel<AddEditItemViewEffect>(Channel.BUFFERED)
+    val effects = _effects.receiveAsFlow()
 
     val viewState: StateFlow<AddEditItemViewState> = _uiState.map { state ->
         when {
@@ -70,7 +76,6 @@ class AddEditItemViewModel(
                 barcode = state.barcode,
                 categories = state.categories,
                 isSaving = state.isSaving,
-                savedSuccessfully = state.savedSuccessfully,
                 validationError = state.validationError,
             )
         }
@@ -181,7 +186,8 @@ class AddEditItemViewModel(
                         ),
                     )
                 }
-                _uiState.value = _uiState.value.copy(isSaving = false, savedSuccessfully = true)
+                _uiState.value = _uiState.value.copy(isSaving = false)
+                _effects.send(AddEditItemViewEffect.NavigateBack)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(isSaving = false, error = e.message)
             }
