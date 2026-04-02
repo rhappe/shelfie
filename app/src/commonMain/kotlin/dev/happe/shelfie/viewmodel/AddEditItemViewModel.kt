@@ -20,6 +20,7 @@ sealed interface AddEditItemViewState {
     data object Loading : AddEditItemViewState
     data class Error(val message: String) : AddEditItemViewState
     data class Content(
+        val isEditing: Boolean,
         val name: String,
         val quantity: String,
         val unit: String,
@@ -74,6 +75,7 @@ private data class AddEditItemUiState(
 class AddEditItemViewModel(
     private val pantryRepository: PantryRepository,
     private val categoryRepository: CategoryRepository,
+    private val itemId: String? = null,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddEditItemUiState())
@@ -85,6 +87,7 @@ class AddEditItemViewModel(
             state.isLoading -> AddEditItemViewState.Loading
             state.error != null -> AddEditItemViewState.Error(state.error)
             else -> AddEditItemViewState.Content(
+                isEditing = itemId != null,
                 name = state.name,
                 quantity = state.quantity,
                 unit = state.unit,
@@ -102,9 +105,14 @@ class AddEditItemViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AddEditItemViewState.Loading)
 
-    private var editingItemId: String? = null
+    init {
+        loadCategories()
+        if (itemId != null) {
+            loadItem(itemId)
+        }
+    }
 
-    fun loadCategories() {
+    private fun loadCategories() {
         viewModelScope.launch {
             try {
                 val categories = categoryRepository.getCategories()
@@ -114,8 +122,7 @@ class AddEditItemViewModel(
         }
     }
 
-    fun loadItem(itemId: String) {
-        editingItemId = itemId
+    private fun loadItem(itemId: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
@@ -184,9 +191,9 @@ class AddEditItemViewModel(
             try {
                 val qty = state.quantity.toDoubleOrNull() ?: 1.0
                 val threshold = state.lowStockThreshold.toDoubleOrNull() ?: 0.0
-                if (editingItemId != null) {
+                if (itemId != null) {
                     pantryRepository.updateItem(
-                        editingItemId!!,
+                        itemId!!,
                         UpdatePantryItemRequest(
                             name = state.name,
                             quantity = qty,

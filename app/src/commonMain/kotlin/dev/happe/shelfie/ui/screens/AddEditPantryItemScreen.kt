@@ -1,42 +1,20 @@
 package dev.happe.shelfie.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.happe.shelfie.viewmodel.AddEditItemViewEffect
 import dev.happe.shelfie.viewmodel.AddEditItemViewEvent
 import dev.happe.shelfie.viewmodel.AddEditItemViewModel
@@ -45,17 +23,9 @@ import dev.happe.shelfie.viewmodel.AddEditItemViewState
 @Composable
 fun AddEditPantryItemScreen(
     viewModel: AddEditItemViewModel,
-    itemId: String?,
     onNavigateBack: () -> Unit,
 ) {
     val viewState by viewModel.viewState.collectAsStateWithLifecycle()
-
-    LaunchedEffect(Unit) {
-        viewModel.loadCategories()
-        if (itemId != null) {
-            viewModel.loadItem(itemId)
-        }
-    }
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
@@ -67,7 +37,6 @@ fun AddEditPantryItemScreen(
 
     AddEditPantryItemScreen(
         viewState = viewState,
-        isEditing = itemId != null,
         onEvent = viewModel::handleEvent,
         onNavigateBack = onNavigateBack,
     )
@@ -77,10 +46,11 @@ fun AddEditPantryItemScreen(
 @Composable
 private fun AddEditPantryItemScreen(
     viewState: AddEditItemViewState,
-    isEditing: Boolean,
     onEvent: (AddEditItemViewEvent) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
+    val isEditing = viewState is AddEditItemViewState.Content && viewState.isEditing
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -102,6 +72,7 @@ private fun AddEditPantryItemScreen(
                     CircularProgressIndicator()
                 }
             }
+
             is AddEditItemViewState.Error -> {
                 Box(
                     modifier = Modifier.fillMaxSize().padding(paddingValues),
@@ -114,6 +85,7 @@ private fun AddEditPantryItemScreen(
                     )
                 }
             }
+
             is AddEditItemViewState.Content -> {
                 Column(
                     modifier = Modifier
@@ -144,7 +116,9 @@ private fun AddEditPantryItemScreen(
                     )
 
                     // Unit dropdown
-                    val unitOptions = listOf("count", "oz", "lb", "g", "kg", "ml", "L", "cups", "tbsp", "tsp", "gal", "qt", "pt")
+                    val unitOptions = listOf(
+                        "count", "oz", "lb", "g", "kg", "ml", "L", "cups", "tbsp", "tsp", "gal", "qt", "pt",
+                    )
                     ExposedDropdownMenuBox(
                         expanded = state.unitDropdownExpanded,
                         onExpandedChange = { onEvent(AddEditItemViewEvent.UnitDropdownExpandedChanged(it)) },
@@ -155,7 +129,9 @@ private fun AddEditPantryItemScreen(
                             readOnly = true,
                             label = { Text("Unit") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = state.unitDropdownExpanded) },
-                            modifier = Modifier.fillMaxWidth().menuAnchor(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
                         )
                         ExposedDropdownMenu(
                             expanded = state.unitDropdownExpanded,
@@ -181,7 +157,9 @@ private fun AddEditPantryItemScreen(
                             readOnly = true,
                             label = { Text("Category") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = state.categoryDropdownExpanded) },
-                            modifier = Modifier.fillMaxWidth().menuAnchor(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
                         )
                         ExposedDropdownMenu(
                             expanded = state.categoryDropdownExpanded,

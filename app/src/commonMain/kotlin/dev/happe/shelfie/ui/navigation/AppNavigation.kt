@@ -93,7 +93,6 @@ fun AppNavigation(
         composable(Screen.AddPantryItem.route) {
             AddEditPantryItemScreen(
                 viewModel = viewModel { AddEditItemViewModel(pantryRepository, categoryRepository) },
-                itemId = null,
                 onNavigateBack = { navController.popBackStack() },
             )
         }
@@ -105,8 +104,7 @@ fun AppNavigation(
             val itemId: String = backStackEntry.savedStateHandle.get<String>("itemId")
                 ?: return@composable
             AddEditPantryItemScreen(
-                viewModel = viewModel { AddEditItemViewModel(pantryRepository, categoryRepository) },
-                itemId = itemId,
+                viewModel = viewModel { AddEditItemViewModel(pantryRepository, categoryRepository, itemId) },
                 onNavigateBack = { navController.popBackStack() },
             )
         }
