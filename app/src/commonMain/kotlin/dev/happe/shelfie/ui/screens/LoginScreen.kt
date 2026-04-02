@@ -2,7 +2,6 @@ package dev.happe.shelfie.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,7 +28,6 @@ fun LoginScreen(
         }
     }
 
-    SelectionContainer {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -111,6 +109,5 @@ fun LoginScreen(
         TextButton(onClick = onNavigateToRegister) {
             Text("Don't have an account? Register")
         }
-    }
     }
 }

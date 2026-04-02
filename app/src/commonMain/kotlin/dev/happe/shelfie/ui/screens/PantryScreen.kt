@@ -1,7 +1,6 @@
 package dev.happe.shelfie.ui.screens
 
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -55,7 +54,6 @@ fun PantryScreen(
             }
         },
     ) { paddingValues ->
-        SelectionContainer {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -196,7 +194,6 @@ fun PantryScreen(
                     }
                 }
             }
-        }
         }
     }
 }

@@ -1,7 +1,6 @@
 package dev.happe.shelfie.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -53,7 +52,6 @@ fun CategoryScreen(
             }
         },
     ) { paddingValues ->
-        SelectionContainer {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -112,7 +110,6 @@ fun CategoryScreen(
                     }
                 }
             }
-        }
         }
     }
 
