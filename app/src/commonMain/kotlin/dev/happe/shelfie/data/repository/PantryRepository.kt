@@ -3,16 +3,16 @@ package dev.happe.shelfie.data.repository
 import dev.happe.shelfie.data.remote.ApiClient
 import dev.happe.shelfie.shared.*
 
-class PantryRepository {
+class PantryRepository(private val apiClient: ApiClient) {
     suspend fun getItems(
         search: String? = null,
         categoryId: String? = null,
         sortBy: String? = null,
     ): List<PantryItem> {
-        return ApiClient.getPantryItems(search, categoryId, sortBy)
+        return apiClient.getPantryItems(search, categoryId, sortBy)
     }
 
-    suspend fun createItem(request: CreatePantryItemRequest) = ApiClient.createPantryItem(request)
-    suspend fun updateItem(id: String, request: UpdatePantryItemRequest) = ApiClient.updatePantryItem(id, request)
-    suspend fun deleteItem(id: String) = ApiClient.deletePantryItem(id)
+    suspend fun createItem(request: CreatePantryItemRequest) = apiClient.createPantryItem(request)
+    suspend fun updateItem(id: String, request: UpdatePantryItemRequest) = apiClient.updatePantryItem(id, request)
+    suspend fun deleteItem(id: String) = apiClient.deletePantryItem(id)
 }

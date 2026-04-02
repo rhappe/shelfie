@@ -16,17 +16,20 @@ data class AuthUiState(
     val isAuthenticated: Boolean = false,
 )
 
-class AuthViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow(AuthUiState(isAuthenticated = TokenStorage.getToken() != null))
+class AuthViewModel(
+    private val tokenStorage: TokenStorage,
+    private val apiClient: ApiClient,
+) : ViewModel() {
+    private val _uiState = MutableStateFlow(AuthUiState(isAuthenticated = tokenStorage.getToken() != null))
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
     fun login(username: String, password: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                val response = ApiClient.login(LoginRequest(username, password))
-                TokenStorage.setToken(response.token)
-                TokenStorage.setHouseholdId(response.householdId)
+                val response = apiClient.login(LoginRequest(username, password))
+                tokenStorage.setToken(response.token)
+                tokenStorage.setHouseholdId(response.householdId)
                 _uiState.value = _uiState.value.copy(isLoading = false, isAuthenticated = true)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(isLoading = false, error = e.message ?: "Login failed")
@@ -38,9 +41,9 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                val response = ApiClient.register(RegisterRequest(username, password, displayName, inviteCode))
-                TokenStorage.setToken(response.token)
-                TokenStorage.setHouseholdId(response.householdId)
+                val response = apiClient.register(RegisterRequest(username, password, displayName, inviteCode))
+                tokenStorage.setToken(response.token)
+                tokenStorage.setHouseholdId(response.householdId)
                 _uiState.value = _uiState.value.copy(isLoading = false, isAuthenticated = true)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(isLoading = false, error = e.message ?: "Registration failed")
@@ -49,7 +52,7 @@ class AuthViewModel : ViewModel() {
     }
 
     fun logout() {
-        TokenStorage.clearToken()
+        tokenStorage.clearToken()
         _uiState.value = AuthUiState(isAuthenticated = false)
     }
 }

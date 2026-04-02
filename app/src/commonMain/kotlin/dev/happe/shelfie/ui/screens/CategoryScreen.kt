@@ -18,17 +18,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.happe.shelfie.shared.Category
 import dev.happe.shelfie.viewmodel.CategoryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryScreen(
+    viewModel: CategoryViewModel,
     onNavigateBack: () -> Unit,
-    categoryViewModel: CategoryViewModel = viewModel { CategoryViewModel() },
 ) {
-    val uiState by categoryViewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
     var editingCategory by remember { mutableStateOf<Category?>(null) }
 
@@ -105,7 +104,7 @@ fun CategoryScreen(
                                 editingCategory = category
                                 showDialog = true
                             },
-                            onDelete = { categoryViewModel.deleteCategory(category.id) },
+                            onDelete = { viewModel.deleteCategory(category.id) },
                         )
                     }
                 }
@@ -119,9 +118,9 @@ fun CategoryScreen(
             onDismiss = { showDialog = false },
             onSave = { name, description, color ->
                 if (editingCategory != null) {
-                    categoryViewModel.updateCategory(editingCategory!!.id, name, description, color)
+                    viewModel.updateCategory(editingCategory!!.id, name, description, color)
                 } else {
-                    categoryViewModel.createCategory(name, description, color)
+                    viewModel.createCategory(name, description, color)
                 }
                 showDialog = false
             },

@@ -2,10 +2,7 @@ package dev.happe.shelfie.data.local
 
 import platform.Foundation.NSUserDefaults
 
-actual object TokenStorage {
-    private const val KEY_TOKEN = "shelfie_auth_token"
-    private const val KEY_HOUSEHOLD_ID = "shelfie_household_id"
-
+actual class TokenStorage {
     private val defaults = NSUserDefaults.standardUserDefaults
 
     actual fun getToken(): String? = defaults.stringForKey(KEY_TOKEN)
@@ -23,5 +20,10 @@ actual object TokenStorage {
 
     actual fun setHouseholdId(id: String) {
         defaults.setObject(id, KEY_HOUSEHOLD_ID)
+    }
+
+    private companion object {
+        const val KEY_TOKEN = "shelfie_auth_token"
+        const val KEY_HOUSEHOLD_ID = "shelfie_household_id"
     }
 }

@@ -26,9 +26,10 @@ data class AddEditItemUiState(
     val savedSuccessfully: Boolean = false,
 )
 
-class AddEditItemViewModel : ViewModel() {
-    private val pantryRepository = PantryRepository()
-    private val categoryRepository = CategoryRepository()
+class AddEditItemViewModel(
+    private val pantryRepository: PantryRepository,
+    private val categoryRepository: CategoryRepository,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddEditItemUiState())
     val uiState: StateFlow<AddEditItemUiState> = _uiState.asStateFlow()

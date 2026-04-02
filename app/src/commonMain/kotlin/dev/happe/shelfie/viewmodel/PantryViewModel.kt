@@ -20,9 +20,10 @@ data class PantryUiState(
     val sortBy: String = "name",
 )
 
-class PantryViewModel : ViewModel() {
-    private val pantryRepository = PantryRepository()
-    private val categoryRepository = CategoryRepository()
+class PantryViewModel(
+    private val pantryRepository: PantryRepository,
+    private val categoryRepository: CategoryRepository,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PantryUiState())
     val uiState: StateFlow<PantryUiState> = _uiState.asStateFlow()

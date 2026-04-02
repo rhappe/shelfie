@@ -10,9 +10,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        TokenStorage.init(this)
+        val tokenStorage = TokenStorage(this)
         setContent {
-            App()
+            App(tokenStorage)
         }
     }
 }

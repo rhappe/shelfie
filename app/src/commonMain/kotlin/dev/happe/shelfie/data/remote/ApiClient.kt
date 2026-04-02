@@ -12,7 +12,7 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 
-object ApiClient {
+class ApiClient(private val tokenStorage: TokenStorage) {
     var baseUrl: String = "http://localhost:8080"
 
     private val jsonConfig = Json { ignoreUnknownKeys = true; isLenient = true }
@@ -34,7 +34,7 @@ object ApiClient {
         install(ContentNegotiation) { json(jsonConfig) }
         defaultRequest {
             contentType(ContentType.Application.Json)
-            TokenStorage.getToken()?.let {
+            tokenStorage.getToken()?.let {
                 headers.append(HttpHeaders.Authorization, "Bearer $it")
             }
         }

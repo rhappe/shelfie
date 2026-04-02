@@ -15,8 +15,9 @@ data class CategoryUiState(
     val error: String? = null,
 )
 
-class CategoryViewModel : ViewModel() {
-    private val repository = CategoryRepository()
+class CategoryViewModel(
+    private val repository: CategoryRepository,
+) : ViewModel() {
     private val _uiState = MutableStateFlow(CategoryUiState())
     val uiState: StateFlow<CategoryUiState> = _uiState.asStateFlow()
 

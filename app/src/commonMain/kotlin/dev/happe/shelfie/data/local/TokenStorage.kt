@@ -1,6 +1,6 @@
 package dev.happe.shelfie.data.local
 
-expect object TokenStorage {
+expect class TokenStorage {
     fun getToken(): String?
     fun setToken(token: String)
     fun clearToken()

@@ -18,20 +18,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.happe.shelfie.shared.PantryItem
 import dev.happe.shelfie.viewmodel.PantryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantryScreen(
+    viewModel: PantryViewModel,
     onAddItem: () -> Unit,
     onEditItem: (String) -> Unit,
     onNavigateToCategories: () -> Unit,
     onLogout: () -> Unit,
-    pantryViewModel: PantryViewModel = viewModel { PantryViewModel() },
 ) {
-    val uiState by pantryViewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     var showSortMenu by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -62,7 +61,7 @@ fun PantryScreen(
             // Search bar
             OutlinedTextField(
                 value = uiState.searchQuery,
-                onValueChange = { pantryViewModel.setSearchQuery(it) },
+                onValueChange = { viewModel.setSearchQuery(it) },
                 placeholder = { Text("Search items...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 singleLine = true,
@@ -80,13 +79,13 @@ fun PantryScreen(
             ) {
                 FilterChip(
                     selected = uiState.selectedCategoryId == null,
-                    onClick = { pantryViewModel.setSelectedCategory(null) },
+                    onClick = { viewModel.setSelectedCategory(null) },
                     label = { Text("All") },
                 )
                 uiState.categories.forEach { category ->
                     FilterChip(
                         selected = uiState.selectedCategoryId == category.id,
-                        onClick = { pantryViewModel.setSelectedCategory(category.id) },
+                        onClick = { viewModel.setSelectedCategory(category.id) },
                         label = { Text(category.name) },
                     )
                 }
@@ -119,21 +118,21 @@ fun PantryScreen(
                         DropdownMenuItem(
                             text = { Text("Name") },
                             onClick = {
-                                pantryViewModel.setSortBy("name")
+                                viewModel.setSortBy("name")
                                 showSortMenu = false
                             },
                         )
                         DropdownMenuItem(
                             text = { Text("Quantity") },
                             onClick = {
-                                pantryViewModel.setSortBy("quantity")
+                                viewModel.setSortBy("quantity")
                                 showSortMenu = false
                             },
                         )
                         DropdownMenuItem(
                             text = { Text("Expiration") },
                             onClick = {
-                                pantryViewModel.setSortBy("expirationDate")
+                                viewModel.setSortBy("expirationDate")
                                 showSortMenu = false
                             },
                         )
@@ -189,7 +188,7 @@ fun PantryScreen(
                             item = item,
                             categoryName = uiState.categories.find { it.id == item.categoryId }?.name,
                             onEdit = { onEditItem(item.id) },
-                            onDelete = { pantryViewModel.deleteItem(item.id) },
+                            onDelete = { viewModel.deleteItem(item.id) },
                         )
                     }
                 }

@@ -2,10 +2,7 @@ package dev.happe.shelfie.data.local
 
 import kotlinx.browser.localStorage
 
-actual object TokenStorage {
-    private const val KEY_TOKEN = "shelfie_auth_token"
-    private const val KEY_HOUSEHOLD_ID = "shelfie_household_id"
-
+actual class TokenStorage {
     actual fun getToken(): String? = localStorage.getItem(KEY_TOKEN)
 
     actual fun setToken(token: String) {
@@ -21,5 +18,10 @@ actual object TokenStorage {
 
     actual fun setHouseholdId(id: String) {
         localStorage.setItem(KEY_HOUSEHOLD_ID, id)
+    }
+
+    private companion object {
+        const val KEY_TOKEN = "shelfie_auth_token"
+        const val KEY_HOUSEHOLD_ID = "shelfie_household_id"
     }
 }

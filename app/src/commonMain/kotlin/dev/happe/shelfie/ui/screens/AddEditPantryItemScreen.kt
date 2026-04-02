@@ -11,15 +11,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.happe.shelfie.viewmodel.AddEditItemViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddEditPantryItemScreen(
+    viewModel: AddEditItemViewModel,
     itemId: String?,
     onNavigateBack: () -> Unit,
-    viewModel: AddEditItemViewModel = viewModel { AddEditItemViewModel() },
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isEditing = itemId != null
