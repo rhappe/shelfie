@@ -1,9 +1,15 @@
 package dev.happe.shelfie.data.remote
 
-import dev.happe.shelfie.shared.*
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
+import dev.happe.shelfie.shared.Category
+import dev.happe.shelfie.shared.CreateCategoryRequest
+import dev.happe.shelfie.shared.UpdateCategoryRequest
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
 
 class CategoryApi(
     private val client: HttpClient,

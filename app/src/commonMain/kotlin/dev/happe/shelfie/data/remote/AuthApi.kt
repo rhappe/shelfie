@@ -1,9 +1,12 @@
 package dev.happe.shelfie.data.remote
 
-import dev.happe.shelfie.shared.*
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
+import dev.happe.shelfie.shared.AuthResponse
+import dev.happe.shelfie.shared.LoginRequest
+import dev.happe.shelfie.shared.RegisterRequest
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 
 class AuthApi(
     private val client: HttpClient,

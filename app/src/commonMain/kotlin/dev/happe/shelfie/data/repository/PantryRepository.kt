@@ -1,7 +1,9 @@
 package dev.happe.shelfie.data.repository
 
 import dev.happe.shelfie.data.remote.PantryApi
-import dev.happe.shelfie.shared.*
+import dev.happe.shelfie.shared.CreatePantryItemRequest
+import dev.happe.shelfie.shared.PantryItem
+import dev.happe.shelfie.shared.UpdatePantryItemRequest
 
 class PantryRepository(private val pantryApi: PantryApi) {
     suspend fun getItems(

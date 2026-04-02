@@ -1,12 +1,15 @@
 package dev.happe.shelfie.di
 
 import dev.happe.shelfie.data.local.TokenStorage
-import dev.happe.shelfie.data.remote.*
+import dev.happe.shelfie.data.remote.AuthApi
+import dev.happe.shelfie.data.remote.CategoryApi
+import dev.happe.shelfie.data.remote.HttpClientFactory
+import dev.happe.shelfie.data.remote.PantryApi
 import dev.happe.shelfie.data.repository.CategoryRepository
 import dev.happe.shelfie.data.repository.PantryRepository
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
-import io.ktor.client.*
+import io.ktor.client.HttpClient
 
 private const val BASE_URL = "http://localhost:8080"
 

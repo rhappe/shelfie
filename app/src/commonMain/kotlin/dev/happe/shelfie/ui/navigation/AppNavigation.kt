@@ -11,7 +11,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import dev.happe.shelfie.data.repository.CategoryRepository
 import dev.happe.shelfie.data.repository.PantryRepository
-import dev.happe.shelfie.ui.screens.*
+import dev.happe.shelfie.ui.screens.AddEditPantryItemScreen
+import dev.happe.shelfie.ui.screens.CategoryScreen
+import dev.happe.shelfie.ui.screens.LoginScreen
+import dev.happe.shelfie.ui.screens.PantryScreen
+import dev.happe.shelfie.ui.screens.RegisterScreen
 import dev.happe.shelfie.viewmodel.AddEditItemViewModel
 import dev.happe.shelfie.viewmodel.AuthViewEvent
 import dev.happe.shelfie.viewmodel.AuthViewModel

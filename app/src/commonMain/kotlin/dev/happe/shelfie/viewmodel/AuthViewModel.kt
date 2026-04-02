@@ -4,7 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.happe.shelfie.data.local.TokenStorage
 import dev.happe.shelfie.data.remote.AuthApi
-import dev.happe.shelfie.shared.*
+import dev.happe.shelfie.shared.LoginRequest
+import dev.happe.shelfie.shared.RegisterRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

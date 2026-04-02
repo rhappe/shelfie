@@ -3,7 +3,9 @@ package dev.happe.shelfie.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.happe.shelfie.data.repository.CategoryRepository
-import dev.happe.shelfie.shared.*
+import dev.happe.shelfie.shared.Category
+import dev.happe.shelfie.shared.CreateCategoryRequest
+import dev.happe.shelfie.shared.UpdateCategoryRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
