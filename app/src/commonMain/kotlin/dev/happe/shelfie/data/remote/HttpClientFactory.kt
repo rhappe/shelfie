@@ -4,6 +4,7 @@ import dev.happe.shelfie.data.local.TokenStorage
 import io.ktor.client.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -25,8 +26,9 @@ object HttpClientFactory {
             install(ContentNegotiation) { json(jsonConfig) }
             defaultRequest {
                 contentType(ContentType.Application.Json)
-                tokenStorage.getToken()?.let {
-                    headers.append(HttpHeaders.Authorization, "Bearer $it")
+                val token = tokenStorage.getToken()
+                if (!token.isNullOrEmpty()) {
+                    bearerAuth(token)
                 }
             }
             installResponseValidator()
