@@ -15,12 +15,28 @@ import kotlinx.serialization.json.Json
 object ApiClient {
     var baseUrl: String = "http://localhost:8080"
 
-    private val client = HttpClient {
-        install(ContentNegotiation) {
-            json(Json { ignoreUnknownKeys = true; isLenient = true })
+    private val jsonConfig = Json { ignoreUnknownKeys = true; isLenient = true }
+
+    private val unauthenticatedClient = HttpClient {
+        install(ContentNegotiation) { json(jsonConfig) }
+        defaultRequest { contentType(ContentType.Application.Json) }
+        HttpResponseValidator {
+            validateResponse { response ->
+                if (!response.status.isSuccess()) {
+                    val body = response.bodyAsText()
+                    throw RuntimeException("${response.status}: $body")
+                }
+            }
         }
+    }
+
+    private val authenticatedClient = HttpClient {
+        install(ContentNegotiation) { json(jsonConfig) }
         defaultRequest {
             contentType(ContentType.Application.Json)
+            TokenStorage.getToken()?.let {
+                headers.append(HttpHeaders.Authorization, "Bearer $it")
+            }
         }
         HttpResponseValidator {
             validateResponse { response ->
@@ -32,44 +48,38 @@ object ApiClient {
         }
     }
 
-    private fun HttpRequestBuilder.withAuth() {
-        TokenStorage.getToken()?.let { headers.append(HttpHeaders.Authorization, "Bearer $it") }
-    }
-
     // Auth
     suspend fun register(request: RegisterRequest): AuthResponse {
-        return client.post("$baseUrl/v1/auth/register") {
+        return unauthenticatedClient.post("$baseUrl/v1/auth/register") {
             setBody(request)
         }.body()
     }
 
     suspend fun login(request: LoginRequest): AuthResponse {
-        return client.post("$baseUrl/v1/auth/login") {
+        return unauthenticatedClient.post("$baseUrl/v1/auth/login") {
             setBody(request)
         }.body()
     }
 
     // Categories
     suspend fun getCategories(): List<Category> {
-        return client.get("$baseUrl/v1/categories") { withAuth() }.body()
+        return authenticatedClient.get("$baseUrl/v1/categories").body()
     }
 
     suspend fun createCategory(request: CreateCategoryRequest): Category {
-        return client.post("$baseUrl/v1/categories") {
-            withAuth()
+        return authenticatedClient.post("$baseUrl/v1/categories") {
             setBody(request)
         }.body()
     }
 
     suspend fun updateCategory(id: String, request: UpdateCategoryRequest): Category {
-        return client.put("$baseUrl/v1/categories/$id") {
-            withAuth()
+        return authenticatedClient.put("$baseUrl/v1/categories/$id") {
             setBody(request)
         }.body()
     }
 
     suspend fun deleteCategory(id: String) {
-        client.delete("$baseUrl/v1/categories/$id") { withAuth() }
+        authenticatedClient.delete("$baseUrl/v1/categories/$id")
     }
 
     // Pantry Items
@@ -78,8 +88,7 @@ object ApiClient {
         categoryId: String? = null,
         sortBy: String? = null,
     ): List<PantryItem> {
-        return client.get("$baseUrl/v1/pantry/items") {
-            withAuth()
+        return authenticatedClient.get("$baseUrl/v1/pantry/items") {
             search?.let { parameter("search", it) }
             categoryId?.let { parameter("categoryId", it) }
             sortBy?.let { parameter("sortBy", it) }
@@ -87,20 +96,18 @@ object ApiClient {
     }
 
     suspend fun createPantryItem(request: CreatePantryItemRequest): PantryItem {
-        return client.post("$baseUrl/v1/pantry/items") {
-            withAuth()
+        return authenticatedClient.post("$baseUrl/v1/pantry/items") {
             setBody(request)
         }.body()
     }
 
     suspend fun updatePantryItem(id: String, request: UpdatePantryItemRequest): PantryItem {
-        return client.put("$baseUrl/v1/pantry/items/$id") {
-            withAuth()
+        return authenticatedClient.put("$baseUrl/v1/pantry/items/$id") {
             setBody(request)
         }.body()
     }
 
     suspend fun deletePantryItem(id: String) {
-        client.delete("$baseUrl/v1/pantry/items/$id") { withAuth() }
+        authenticatedClient.delete("$baseUrl/v1/pantry/items/$id")
     }
 }
