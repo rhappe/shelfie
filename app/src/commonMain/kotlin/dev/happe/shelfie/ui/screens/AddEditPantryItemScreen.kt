@@ -14,10 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import dev.happe.shelfie.viewmodel.AddEditItemViewEffect
+import dev.happe.shelfie.viewmodel.AddEditItemViewEvent
 import dev.happe.shelfie.viewmodel.AddEditItemViewModel
 import dev.happe.shelfie.viewmodel.AddEditItemViewState
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddEditPantryItemScreen(
     viewModel: AddEditItemViewModel,
@@ -25,7 +25,6 @@ fun AddEditPantryItemScreen(
     onNavigateBack: () -> Unit,
 ) {
     val viewState by viewModel.viewState.collectAsStateWithLifecycle()
-    val isEditing = itemId != null
 
     LaunchedEffect(Unit) {
         viewModel.loadCategories()
@@ -42,6 +41,22 @@ fun AddEditPantryItemScreen(
         }
     }
 
+    AddEditPantryItemScreen(
+        viewState = viewState,
+        isEditing = itemId != null,
+        onEvent = viewModel::handleEvent,
+        onNavigateBack = onNavigateBack,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddEditPantryItemScreen(
+    viewState: AddEditItemViewState,
+    isEditing: Boolean,
+    onEvent: (AddEditItemViewEvent) -> Unit,
+    onNavigateBack: () -> Unit,
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -87,7 +102,7 @@ fun AddEditPantryItemScreen(
                     // Name
                     OutlinedTextField(
                         value = state.name,
-                        onValueChange = { viewModel.updateName(it) },
+                        onValueChange = { onEvent(AddEditItemViewEvent.NameChanged(it)) },
                         label = { Text("Name *") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
@@ -97,7 +112,7 @@ fun AddEditPantryItemScreen(
                     // Quantity
                     OutlinedTextField(
                         value = state.quantity,
-                        onValueChange = { viewModel.updateQuantity(it) },
+                        onValueChange = { onEvent(AddEditItemViewEvent.QuantityChanged(it)) },
                         label = { Text("Quantity") },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -105,68 +120,57 @@ fun AddEditPantryItemScreen(
                     )
 
                     // Unit dropdown
-                    var unitExpanded by remember { mutableStateOf(false) }
                     val unitOptions = listOf("count", "oz", "lb", "g", "kg", "ml", "L", "cups", "tbsp", "tsp", "gal", "qt", "pt")
                     ExposedDropdownMenuBox(
-                        expanded = unitExpanded,
-                        onExpandedChange = { unitExpanded = it },
+                        expanded = state.unitDropdownExpanded,
+                        onExpandedChange = { onEvent(AddEditItemViewEvent.UnitDropdownExpandedChanged(it)) },
                     ) {
                         OutlinedTextField(
                             value = state.unit,
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Unit") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = unitExpanded) },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = state.unitDropdownExpanded) },
                             modifier = Modifier.fillMaxWidth().menuAnchor(),
                         )
                         ExposedDropdownMenu(
-                            expanded = unitExpanded,
-                            onDismissRequest = { unitExpanded = false },
+                            expanded = state.unitDropdownExpanded,
+                            onDismissRequest = { onEvent(AddEditItemViewEvent.UnitDropdownExpandedChanged(false)) },
                         ) {
                             unitOptions.forEach { unit ->
                                 DropdownMenuItem(
                                     text = { Text(unit) },
-                                    onClick = {
-                                        viewModel.updateUnit(unit)
-                                        unitExpanded = false
-                                    },
+                                    onClick = { onEvent(AddEditItemViewEvent.UnitSelected(unit)) },
                                 )
                             }
                         }
                     }
 
                     // Category dropdown
-                    var categoryExpanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(
-                        expanded = categoryExpanded,
-                        onExpandedChange = { categoryExpanded = it },
+                        expanded = state.categoryDropdownExpanded,
+                        onExpandedChange = { onEvent(AddEditItemViewEvent.CategoryDropdownExpandedChanged(it)) },
                     ) {
                         OutlinedTextField(
                             value = state.categories.find { it.id == state.categoryId }?.name ?: "None",
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Category") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = state.categoryDropdownExpanded) },
                             modifier = Modifier.fillMaxWidth().menuAnchor(),
                         )
                         ExposedDropdownMenu(
-                            expanded = categoryExpanded,
-                            onDismissRequest = { categoryExpanded = false },
+                            expanded = state.categoryDropdownExpanded,
+                            onDismissRequest = { onEvent(AddEditItemViewEvent.CategoryDropdownExpandedChanged(false)) },
                         ) {
                             DropdownMenuItem(
                                 text = { Text("None") },
-                                onClick = {
-                                    viewModel.updateCategoryId(null)
-                                    categoryExpanded = false
-                                },
+                                onClick = { onEvent(AddEditItemViewEvent.CategorySelected(null)) },
                             )
                             state.categories.forEach { category ->
                                 DropdownMenuItem(
                                     text = { Text(category.name) },
-                                    onClick = {
-                                        viewModel.updateCategoryId(category.id)
-                                        categoryExpanded = false
-                                    },
+                                    onClick = { onEvent(AddEditItemViewEvent.CategorySelected(category.id)) },
                                 )
                             }
                         }
@@ -175,7 +179,7 @@ fun AddEditPantryItemScreen(
                     // Expiration date
                     OutlinedTextField(
                         value = state.expirationDate ?: "",
-                        onValueChange = { viewModel.updateExpirationDate(it.ifBlank { null }) },
+                        onValueChange = { onEvent(AddEditItemViewEvent.ExpirationDateChanged(it.ifBlank { null })) },
                         label = { Text("Expiration Date (YYYY-MM-DD)") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
@@ -184,7 +188,7 @@ fun AddEditPantryItemScreen(
                     // Low stock threshold
                     OutlinedTextField(
                         value = state.lowStockThreshold,
-                        onValueChange = { viewModel.updateLowStockThreshold(it) },
+                        onValueChange = { onEvent(AddEditItemViewEvent.LowStockThresholdChanged(it)) },
                         label = { Text("Low Stock Threshold") },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -200,7 +204,7 @@ fun AddEditPantryItemScreen(
                         Text("Notify on low stock")
                         Switch(
                             checked = state.notifyOnLowStock,
-                            onCheckedChange = { viewModel.updateNotifyOnLowStock(it) },
+                            onCheckedChange = { onEvent(AddEditItemViewEvent.NotifyOnLowStockChanged(it)) },
                         )
                     }
 
@@ -215,7 +219,7 @@ fun AddEditPantryItemScreen(
 
                     // Save button
                     Button(
-                        onClick = { viewModel.save() },
+                        onClick = { onEvent(AddEditItemViewEvent.Save) },
                         enabled = !state.isSaving,
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                     ) {

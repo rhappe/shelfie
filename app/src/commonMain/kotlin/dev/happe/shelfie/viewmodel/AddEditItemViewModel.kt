@@ -29,11 +29,26 @@ sealed interface AddEditItemViewState {
         val categories: List<Category>,
         val isSaving: Boolean,
         val validationError: String?,
+        val unitDropdownExpanded: Boolean,
+        val categoryDropdownExpanded: Boolean,
     ) : AddEditItemViewState
 }
 
 sealed interface AddEditItemViewEffect {
     data object NavigateBack : AddEditItemViewEffect
+}
+
+sealed interface AddEditItemViewEvent {
+    data class NameChanged(val name: String) : AddEditItemViewEvent
+    data class QuantityChanged(val quantity: String) : AddEditItemViewEvent
+    data class UnitSelected(val unit: String) : AddEditItemViewEvent
+    data class CategorySelected(val categoryId: String?) : AddEditItemViewEvent
+    data class ExpirationDateChanged(val date: String?) : AddEditItemViewEvent
+    data class LowStockThresholdChanged(val threshold: String) : AddEditItemViewEvent
+    data class NotifyOnLowStockChanged(val notify: Boolean) : AddEditItemViewEvent
+    data class UnitDropdownExpandedChanged(val expanded: Boolean) : AddEditItemViewEvent
+    data class CategoryDropdownExpandedChanged(val expanded: Boolean) : AddEditItemViewEvent
+    data object Save : AddEditItemViewEvent
 }
 
 private data class AddEditItemUiState(
@@ -50,6 +65,8 @@ private data class AddEditItemUiState(
     val isSaving: Boolean = false,
     val error: String? = null,
     val validationError: String? = null,
+    val unitDropdownExpanded: Boolean = false,
+    val categoryDropdownExpanded: Boolean = false,
 )
 
 class AddEditItemViewModel(
@@ -77,6 +94,8 @@ class AddEditItemViewModel(
                 categories = state.categories,
                 isSaving = state.isSaving,
                 validationError = state.validationError,
+                unitDropdownExpanded = state.unitDropdownExpanded,
+                categoryDropdownExpanded = state.categoryDropdownExpanded,
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AddEditItemViewState.Loading)
@@ -119,35 +138,40 @@ class AddEditItemViewModel(
         }
     }
 
-    fun updateName(name: String) {
-        _uiState.value = _uiState.value.copy(name = name, validationError = null)
+    fun handleEvent(event: AddEditItemViewEvent) {
+        when (event) {
+            is AddEditItemViewEvent.NameChanged -> {
+                _uiState.value = _uiState.value.copy(name = event.name, validationError = null)
+            }
+            is AddEditItemViewEvent.QuantityChanged -> {
+                _uiState.value = _uiState.value.copy(quantity = event.quantity)
+            }
+            is AddEditItemViewEvent.UnitSelected -> {
+                _uiState.value = _uiState.value.copy(unit = event.unit, unitDropdownExpanded = false)
+            }
+            is AddEditItemViewEvent.CategorySelected -> {
+                _uiState.value = _uiState.value.copy(categoryId = event.categoryId, categoryDropdownExpanded = false)
+            }
+            is AddEditItemViewEvent.ExpirationDateChanged -> {
+                _uiState.value = _uiState.value.copy(expirationDate = event.date)
+            }
+            is AddEditItemViewEvent.LowStockThresholdChanged -> {
+                _uiState.value = _uiState.value.copy(lowStockThreshold = event.threshold)
+            }
+            is AddEditItemViewEvent.NotifyOnLowStockChanged -> {
+                _uiState.value = _uiState.value.copy(notifyOnLowStock = event.notify)
+            }
+            is AddEditItemViewEvent.UnitDropdownExpandedChanged -> {
+                _uiState.value = _uiState.value.copy(unitDropdownExpanded = event.expanded)
+            }
+            is AddEditItemViewEvent.CategoryDropdownExpandedChanged -> {
+                _uiState.value = _uiState.value.copy(categoryDropdownExpanded = event.expanded)
+            }
+            is AddEditItemViewEvent.Save -> save()
+        }
     }
 
-    fun updateQuantity(qty: String) {
-        _uiState.value = _uiState.value.copy(quantity = qty)
-    }
-
-    fun updateUnit(unit: String) {
-        _uiState.value = _uiState.value.copy(unit = unit)
-    }
-
-    fun updateCategoryId(id: String?) {
-        _uiState.value = _uiState.value.copy(categoryId = id)
-    }
-
-    fun updateExpirationDate(date: String?) {
-        _uiState.value = _uiState.value.copy(expirationDate = date)
-    }
-
-    fun updateLowStockThreshold(threshold: String) {
-        _uiState.value = _uiState.value.copy(lowStockThreshold = threshold)
-    }
-
-    fun updateNotifyOnLowStock(notify: Boolean) {
-        _uiState.value = _uiState.value.copy(notifyOnLowStock = notify)
-    }
-
-    fun save() {
+    private fun save() {
         val state = _uiState.value
         if (state.name.isBlank()) {
             _uiState.value = state.copy(validationError = "Name is required")
