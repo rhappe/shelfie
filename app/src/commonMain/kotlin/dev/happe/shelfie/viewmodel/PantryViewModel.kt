@@ -21,7 +21,20 @@ sealed interface PantryViewState {
         val searchQuery: String,
         val selectedCategoryId: String?,
         val sortBy: String,
+        val showSortMenu: Boolean,
+        val deletingItemId: String?,
     ) : PantryViewState
+}
+
+sealed interface PantryViewEvent {
+    data class SearchQueryChanged(val query: String) : PantryViewEvent
+    data class CategorySelected(val categoryId: String?) : PantryViewEvent
+    data class SortByChanged(val sortBy: String) : PantryViewEvent
+    data object ToggleSortMenu : PantryViewEvent
+    data object DismissSortMenu : PantryViewEvent
+    data class RequestDeleteItem(val itemId: String) : PantryViewEvent
+    data object ConfirmDeleteItem : PantryViewEvent
+    data object DismissDeleteConfirm : PantryViewEvent
 }
 
 private data class PantryUiState(
@@ -32,6 +45,8 @@ private data class PantryUiState(
     val searchQuery: String = "",
     val selectedCategoryId: String? = null,
     val sortBy: String = "name",
+    val showSortMenu: Boolean = false,
+    val deletingItemId: String? = null,
 )
 
 class PantryViewModel(
@@ -51,6 +66,8 @@ class PantryViewModel(
                 searchQuery = state.searchQuery,
                 selectedCategoryId = state.selectedCategoryId,
                 sortBy = state.sortBy,
+                showSortMenu = state.showSortMenu,
+                deletingItemId = state.deletingItemId,
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PantryViewState.Loading)
@@ -59,7 +76,41 @@ class PantryViewModel(
         loadData()
     }
 
-    fun loadData() {
+    fun handleEvent(event: PantryViewEvent) {
+        when (event) {
+            is PantryViewEvent.SearchQueryChanged -> {
+                _uiState.value = _uiState.value.copy(searchQuery = event.query)
+                loadData()
+            }
+            is PantryViewEvent.CategorySelected -> {
+                _uiState.value = _uiState.value.copy(selectedCategoryId = event.categoryId)
+                loadData()
+            }
+            is PantryViewEvent.SortByChanged -> {
+                _uiState.value = _uiState.value.copy(sortBy = event.sortBy, showSortMenu = false)
+                loadData()
+            }
+            is PantryViewEvent.ToggleSortMenu -> {
+                _uiState.value = _uiState.value.copy(showSortMenu = !_uiState.value.showSortMenu)
+            }
+            is PantryViewEvent.DismissSortMenu -> {
+                _uiState.value = _uiState.value.copy(showSortMenu = false)
+            }
+            is PantryViewEvent.RequestDeleteItem -> {
+                _uiState.value = _uiState.value.copy(deletingItemId = event.itemId)
+            }
+            is PantryViewEvent.ConfirmDeleteItem -> {
+                val itemId = _uiState.value.deletingItemId ?: return
+                _uiState.value = _uiState.value.copy(deletingItemId = null)
+                deleteItem(itemId)
+            }
+            is PantryViewEvent.DismissDeleteConfirm -> {
+                _uiState.value = _uiState.value.copy(deletingItemId = null)
+            }
+        }
+    }
+
+    private fun loadData() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
@@ -76,22 +127,7 @@ class PantryViewModel(
         }
     }
 
-    fun setSearchQuery(query: String) {
-        _uiState.value = _uiState.value.copy(searchQuery = query)
-        loadData()
-    }
-
-    fun setSelectedCategory(categoryId: String?) {
-        _uiState.value = _uiState.value.copy(selectedCategoryId = categoryId)
-        loadData()
-    }
-
-    fun setSortBy(sortBy: String) {
-        _uiState.value = _uiState.value.copy(sortBy = sortBy)
-        loadData()
-    }
-
-    fun deleteItem(id: String) {
+    private fun deleteItem(id: String) {
         viewModelScope.launch {
             try {
                 pantryRepository.deleteItem(id)
