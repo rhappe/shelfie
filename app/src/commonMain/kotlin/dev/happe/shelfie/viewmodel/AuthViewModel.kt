@@ -3,7 +3,7 @@ package dev.happe.shelfie.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.happe.shelfie.data.local.TokenStorage
-import dev.happe.shelfie.data.remote.ApiClient
+import dev.happe.shelfie.data.remote.AuthApi
 import dev.happe.shelfie.shared.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +18,7 @@ data class AuthUiState(
 
 class AuthViewModel(
     private val tokenStorage: TokenStorage,
-    private val apiClient: ApiClient,
+    private val authApi: AuthApi,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AuthUiState(isAuthenticated = tokenStorage.getToken() != null))
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
@@ -27,7 +27,7 @@ class AuthViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                val response = apiClient.login(LoginRequest(username, password))
+                val response = authApi.login(LoginRequest(username, password))
                 tokenStorage.setToken(response.token)
                 tokenStorage.setHouseholdId(response.householdId)
                 _uiState.value = _uiState.value.copy(isLoading = false, isAuthenticated = true)
@@ -41,7 +41,7 @@ class AuthViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                val response = apiClient.register(RegisterRequest(username, password, displayName, inviteCode))
+                val response = authApi.register(RegisterRequest(username, password, displayName, inviteCode))
                 tokenStorage.setToken(response.token)
                 tokenStorage.setHouseholdId(response.householdId)
                 _uiState.value = _uiState.value.copy(isLoading = false, isAuthenticated = true)
