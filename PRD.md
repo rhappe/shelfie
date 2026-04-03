@@ -69,7 +69,7 @@ Give households a single source of truth for what's in their pantry, reduce food
 |-------|------|----------|-------|
 | Name | String | Yes | |
 | Quantity | Decimal | Yes | |
-| Unit | String | Yes | e.g., "oz", "lbs", "count", "cups" — user-selectable from a list or custom entry |
+| Unit | Reference | Yes | References a system-defined unit of measure (see section 3.6) |
 | Category | Reference | No | User-defined |
 | Expiration Date | Date | No | |
 | Low-Stock Threshold | Decimal | No | Default: 0 |
@@ -102,7 +102,69 @@ Give households a single source of truth for what's in their pantry, reduce food
 
 Deferred — implementation details TBD when this phase is reached.
 
-### 3.4 Shopping Lists (Phase 2)
+### 3.4 Units of Measure
+
+#### Measurement Types
+
+There are three measurement types. Each type has a **base unit** that serves as the canonical storage format.
+
+| Type | Base Unit | Example Units |
+|------|-----------|---------------|
+| Weight | grams (g) | g, kg, oz, lbs |
+| Volume | milliliters (mL) | mL, L, tsp, tbsp, fl oz, cups, pt, qt, gal |
+| Count | count | count, dozen |
+
+#### Unit Definition Table (Backend)
+
+Units are stored in a database table with the following structure:
+
+| Column | Type | Example | Notes |
+|--------|------|---------|-------|
+| type | String | `weight`, `volume`, `count` | |
+| label | String | `grams`, `pounds`, `cups` | |
+| short_label | String | `g`, `lbs`, `cups` | Falls back to label if blank |
+| to_base_ratio | Decimal | `1.0`, `453.5924`, `236.588` | |
+| is_system | Boolean | `true`, `false` | System units are pre-seeded and cannot be deleted |
+
+The system ships with a pre-seeded set of common units. Users can also create custom units by specifying the type, label, short label (optional), and conversion ratio to the base unit. This covers any niche or regional units the system doesn't include out of the box.
+
+The `to_base_ratio` defines how many base units equal one of this unit. For example:
+- 1 lb = 453.5924 g → `to_base_ratio = 453.5924`
+- 1 cup = 236.588 mL → `to_base_ratio = 236.588`
+- 1 g = 1 g → `to_base_ratio = 1.0`
+- 1 dozen = 12 count → `to_base_ratio = 12.0`
+
+#### Storage and Display
+
+- When a user creates or updates a pantry item, they select their preferred unit and enter a quantity.
+- The system stores the quantity converted to the base unit (e.g., 2 lbs is stored as 907.1848 g).
+- The user's preferred unit is stored alongside the item.
+- For display, the stored base-unit quantity is converted back to the user's preferred unit.
+
+#### Same-Dimension Conversion
+
+Conversions within the same measurement type (weight-to-weight, volume-to-volume) are automatic and exact using the `to_base_ratio` values. No user interaction is needed.
+
+Example: A recipe calls for 2 cups of milk. The pantry has milk stored in liters. Both are volume — the system converts both to mL and deducts automatically.
+
+#### Cross-Dimension Conversion (Weight ↔ Volume)
+
+Converting between weight and volume requires knowing the density of the specific substance, which varies by item (e.g., a cup of water weighs ~236g, but a cup of flour weighs ~125g). The system cannot resolve this automatically.
+
+**Reconciliation flow:**
+
+1. When a deduction requires a cross-dimension conversion (e.g., deducting cups from an item stored in grams), the system prompts the user to declare how much was actually consumed in the item's stored unit.
+2. The system calculates and stores a **per-item cross-dimension conversion factor** (e.g., for "All-Purpose Flour": 1 mL ≈ 0.529 g).
+3. On subsequent deductions for that item, the stored conversion factor is used automatically — no further prompts.
+4. The user can update the conversion factor at any time if it was inaccurate.
+
+This means cross-dimension conversions are learned per item, and the system gets smarter over time.
+
+#### Count Type
+
+Count-based items (e.g., "6 eggs", "1 dozen rolls") cannot be converted to weight or volume. Deductions involving a count item and a weight/volume recipe ingredient require manual reconciliation as described above.
+
+### 3.5 Shopping Lists (Phase 2)
 
 - Users can have multiple named shopping lists. A default list named "My List" is created automatically for new users.
 - Each list has a name and an ordered set of entries.
@@ -119,7 +181,7 @@ Deferred — implementation details TBD when this phase is reached.
   3. For any checked free-form items: prompt asking whether to add each to the pantry. User can set category and adjust details before confirming.
   4. List is cleared (entries removed; the list itself is retained).
 
-### 3.5 Recipes (Phase 3)
+### 3.6 Recipes (Phase 3)
 
 | Field | Type |
 |-------|------|
@@ -131,12 +193,11 @@ Deferred — implementation details TBD when this phase is reached.
 
 - Pantry match indicator: "Can make", "Missing X items", "Short on X items".
 - "Make This" deduction tiers:
-  1. **Exact unit match** — deducted automatically.
-  2. **Same-dimension unit conversion** — resolved automatically using a built-in conversion table (volume: cups, tbsp, tsp, fl oz, ml, L; weight: oz, lbs, g, kg). Deducted automatically.
-  3. **Weight ↔ volume mismatch** — cannot be resolved without ingredient density data; user is prompted to confirm or skip.
-  4. **Item not found in pantry** — user is prompted to confirm or skip.
-  5. **Non-quantifiable** (e.g., "pinch of salt") — shown as a reminder only; never deducted.
-- Unit conversion logic lives in the backend.
+  1. **Same-dimension conversion** (e.g., cups → mL, lbs → g) — deducted automatically using the unit conversion system (see section 3.4).
+  2. **Cross-dimension conversion** (e.g., cups → g) — if the item has a stored cross-dimension conversion factor, deducted automatically. Otherwise, the user is prompted via the reconciliation flow (see section 3.4) to declare consumption, which teaches the system for future use.
+  3. **Item not found in pantry** — user is prompted to confirm or skip.
+  4. **Non-quantifiable** (e.g., "pinch of salt") — shown as a reminder only; never deducted.
+- All unit conversion logic lives in the backend.
 
 ---
 
