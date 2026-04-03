@@ -1,31 +1,23 @@
 package dev.happe.shelfie
 
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import dev.happe.shelfie.data.remote.BASE_URL
-import dev.happe.shelfie.data.remote.apiClient
-import dev.happe.shelfie.shared.HelloResponse
-import io.ktor.client.call.*
-import io.ktor.client.request.*
+import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.rememberNavController
+import dev.happe.shelfie.di.AppGraph
+import dev.happe.shelfie.di.rememberAppGraph
+import dev.happe.shelfie.ui.navigation.AppNavigation
+import dev.happe.shelfie.viewmodel.AuthViewModel
 
 @Composable
-fun App() {
-    var appName by remember { mutableStateOf<String?>(null) }
-
-    LaunchedEffect(Unit) {
-        try {
-            val response = apiClient.get("$BASE_URL/v1/hello").body<HelloResponse>()
-            appName = response.appName
-        } catch (e: Exception) {
-            appName = "error: ${e.message}"
-        }
-    }
-
+fun App(graph: AppGraph = rememberAppGraph()) {
     MaterialTheme {
-        Surface {
-            Text(if (appName != null) "Hello, $appName!" else "Loading…")
-        }
+        val navController = rememberNavController()
+        val authViewModel: AuthViewModel = viewModel { AuthViewModel(graph) }
+        AppNavigation(
+            navController = navController,
+            graph = graph,
+            authViewModel = authViewModel,
+        )
     }
 }
