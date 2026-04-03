@@ -8,7 +8,7 @@
 
 ## 1. Overview
 
-Shelfie is a cross-platform pantry management application that helps households track their food inventory, reduce waste, and streamline grocery shopping. It is self-hostable, offline-capable, and designed to grow from a simple inventory tracker into a full household kitchen management tool.
+Shelfie is a cross-platform pantry management application that helps households track their food inventory, reduce waste, and streamline grocery shopping. It is self-hostable and designed to grow from a simple inventory tracker into a full household kitchen management tool.
 
 ### 1.1 Vision
 
@@ -35,7 +35,7 @@ Give households a single source of truth for what's in their pantry, reduce food
 - As a user, I can search my pantry by item name, filtering results as I type (local, no API call).
 - As a user, I can view my pantry filtered by category, sorted by name, quantity, or expiration date.
 - Search and category filter can be used together.
-- As a user, my data syncs across devices and is available offline.
+- As a user, my data syncs across devices and loads instantly from a local cache.
 
 ### Phase 2 — Shopping Lists
 
@@ -157,7 +157,7 @@ Two separate repositories:
 │  ┌──────────────┐  ┌────────────────┐    │
 │  │  Android     │  │  Web (Wasm)    │    │
 │  │  + SQLDelight│  │  (migrate to   │    │
-│  │    cache     │  │  own impl if   │    │
+│  │    local db  │  │  own impl if   │    │
 │  │              │  │  needed)       │    │
 │  └──────┬───────┘  └───────┬────────┘    │
 └─────────┼──────────────────┼────────────┘
@@ -181,7 +181,7 @@ All complex operations (low-stock evaluation, expiration checks, recipe pantry m
 
 - Render UI and handle user input
 - Call API endpoints and display results
-- Cache responses locally for offline reads (Android/iOS only via SQLDelight)
+- Cache responses locally via SQLDelight (Android/iOS) for instant loads and reactive UI
 - Manage navigation and UI state
 
 This keeps the client simple, makes a future web-only reimplementation straightforward, and means business logic is tested and maintained in one place.
@@ -224,14 +224,14 @@ A single Compose Multiplatform module produces both the Android app and the Web 
 | androidx.lifecycle.ViewModel (2.8+) | Shared ViewModel across Android and Web Wasm — same `StateFlow`-based UI state pattern on both targets |
 | Ktor Client | HTTP requests to backend |
 | Metro | Compile-time DI across all targets |
-| SQLDelight | Local read cache for offline support (Android; skip on web) |
+| SQLDelight | Local cache for instant loads and reactive UI (Android; skip on web) |
 | ML Kit | Barcode scanning (androidMain only — future) |
 
-**Offline support (Android only):**
-- SQLDelight is used as a read cache only — the backend is the source of truth
-- Writes are sent directly to the API; on success the local cache is updated
-- On network loss, the app shows cached data with a "you're offline" indicator
-- No complex sync/conflict resolution needed given the thin-client approach
+**Local caching (Android only):**
+- SQLDelight serves as a local cache — the backend remains the source of truth
+- The UI observes the local database, so screens update reactively
+- API responses are written to the cache; the UI renders from the cache, not directly from network responses
+- Writes are sent to the API; on success the local cache is updated, which automatically propagates to the UI
 
 ### 4.4 Backend (`shelfie-server`)
 
@@ -266,12 +266,12 @@ All endpoints are prefixed with `/v1/` (e.g., `GET /v1/pantry/items`). This allo
 |----------|---------|
 | Failed API write (optimistic rollback) | Snackbar |
 | Form validation failure | Inline, next to the offending field |
-| Offline / connectivity lost | Persistent banner |
+| Network unavailable | Cached data served transparently; failed writes surface via snackbar |
 | Catastrophic / unrecoverable error | Full-screen error state with retry |
 
 ---
 
-## 5. Data Sync & Offline Support
+## 5. Data Sync & Local Caching
 
 **Write path — inline quantity adjustments** (e.g., +/- on the pantry list):
 1. Each tap updates the UI immediately (optimistic) and resets a debounce timer (~600ms).
@@ -288,10 +288,8 @@ This ensures at most one in-flight request per item at any time, no tap is lost,
 4. On failure: changes are rolled back and the form is reopened with an error.
 
 **Read path:**
-- On launch / foreground: fetch fresh data from API, update local cache.
-- While offline (Android): serve cached SQLDelight data with an "you're offline" indicator.
-
-**Offline writes:** Not supported in Phase 1. Write actions are blocked when offline with an explanatory message, avoiding conflict resolution complexity.
+- The UI observes SQLDelight queries, so data is available instantly from cache on launch.
+- On launch / foreground: fetch fresh data from the API and update the local cache, which reactively updates the UI.
 
 ---
 
@@ -299,7 +297,7 @@ This ensures at most one in-flight request per item at any time, no tap is lost,
 
 | Requirement | Target |
 |-------------|--------|
-| Offline capability | Full read/write while offline; sync on reconnect |
+| Instant loads | Screens render from local cache immediately; network refreshes in background |
 | Cold start time (Android) | < 2 seconds |
 | Sync latency | < 5 seconds on reconnect |
 | Self-host resource footprint | Runs comfortably on a 1GB RAM VPS or Raspberry Pi 4 |
@@ -334,7 +332,7 @@ This ensures at most one in-flight request per item at any time, no tap is lost,
 
 | Phase | Features | Target |
 |-------|----------|--------|
-| Phase 1 | Pantry CRUD, categories, offline sync, Android + Web | MVP |
+| Phase 1 | Pantry CRUD, categories, local caching, Android + Web | MVP |
 | Phase 2 | Multiple named shopping lists, household multi-user | Post-MVP |
 | Phase 3 | Notifications (low-stock + expiration), recipes, pantry match indicator, "Make This" deduction | Future |
 | Phase 4 | iOS native app | Indefinitely TBD (requires Apple Developer account) |
