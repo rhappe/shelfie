@@ -4,15 +4,16 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import dev.happe.shelfie.data.local.TokenStorage
+import dev.happe.shelfie.di.AndroidAppGraph
+import dev.happe.shelfie.di.CommonBindings
+import dev.zacsweers.metro.createGraphFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val tokenStorage = TokenStorage(this)
         setContent {
-            App(tokenStorage)
+            App()
         }
     }
 }
