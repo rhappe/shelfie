@@ -118,12 +118,15 @@ There are three measurement types. Each type has a **base unit** that serves as 
 
 Units are stored in a database table with the following structure:
 
-| Column | Type | Example |
-|--------|------|---------|
-| type | String | `weight`, `volume`, `count` |
-| label | String | `grams`, `pounds`, `cups` |
-| short_label | String | `g`, `lbs`, `cups` |
-| to_base_ratio | Decimal | `1.0`, `453.5924`, `236.588` |
+| Column | Type | Example | Notes |
+|--------|------|---------|-------|
+| type | String | `weight`, `volume`, `count` | |
+| label | String | `grams`, `pounds`, `cups` | |
+| short_label | String | `g`, `lbs`, `cups` | Falls back to label if blank |
+| to_base_ratio | Decimal | `1.0`, `453.5924`, `236.588` | |
+| is_system | Boolean | `true`, `false` | System units are pre-seeded and cannot be deleted |
+
+The system ships with a pre-seeded set of common units. Users can also create custom units by specifying the type, label, short label (optional), and conversion ratio to the base unit. This covers any niche or regional units the system doesn't include out of the box.
 
 The `to_base_ratio` defines how many base units equal one of this unit. For example:
 - 1 lb = 453.5924 g → `to_base_ratio = 453.5924`
